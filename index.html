@@ -1,0 +1,5773 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Orçun Dondurma</title>
+<meta name="theme-color" content="#0a0a0d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Orçun">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<style>
+:root {
+  --bg-base: #0a0a0d;
+  --bg-panel: #15151b;
+  --bg-deep: #050507;
+  --bg-elev: #1e1e25;
+  --text-primary: #ececf1;
+  --text-secondary: #9a9aa3;
+  --text-tertiary: #5e5e68;
+  --border: #2a2a32;
+  --border-strong: #3a3a45;
+
+  --accent-today: #b8a4ff;
+  --accent-income: #5fd4a3;
+  --accent-expense: #ff7a8a;
+  --accent-supplier: #ffc859;
+  --accent-more: #9aa0a8;
+
+  --danger: #ff5252;
+  --success: #5fd4a3;
+  --warning: #ffc859;
+
+  --shadow-up: 0 -2px 16px rgba(0,0,0,0.5);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+}
+body { min-height: 100vh; min-height: 100dvh; }
+
+#app {
+  max-width: 960px;
+  margin: 0 auto;
+  position: relative;
+  min-height: 100vh; min-height: 100dvh;
+}
+
+/* ==================== Login Ekranı ==================== */
+.login-screen {
+  padding: 24px 20px;
+  display: flex; flex-direction: column;
+  justify-content: center;
+  min-height: 100vh; min-height: 100dvh;
+}
+.login-logo { text-align: center; margin-bottom: 32px; }
+.login-logo .emoji { font-size: 56px; display: block; }
+.login-logo h1 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500; font-size: 28px;
+  margin: 8px 0 4px; color: var(--text-primary);
+}
+.login-logo .tag {
+  font-size: 11px; color: var(--text-tertiary);
+  letter-spacing: 3px; text-transform: uppercase;
+}
+.login-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+.login-step { display: none; }
+.login-step.active { display: block; }
+.field-label {
+  font-size: 11px; color: var(--text-tertiary);
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 8px; font-weight: 500;
+}
+.field-input {
+  width: 100%;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  color: var(--text-primary);
+  font-family: inherit; font-size: 16px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.field-input:focus { border-color: var(--border-strong); }
+.field-group { margin-bottom: 16px; }
+.field-hint {
+  font-size: 12px; color: var(--text-tertiary);
+  margin-top: 6px; line-height: 1.4;
+}
+.btn-primary {
+  width: 100%;
+  background: var(--text-primary);
+  color: var(--bg-deep);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-family: inherit; font-size: 15px; font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; cursor: wait; }
+.btn-secondary {
+  width: 100%;
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-family: inherit; font-size: 14px; font-weight: 500;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.btn-secondary:active { background: var(--bg-elev); }
+.error-msg {
+  background: rgba(255, 82, 82, 0.1);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  color: var(--danger);
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  margin: 12px 0;
+}
+
+/* ==================== Çalışan Seçimi ==================== */
+.player-list {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-bottom: 12px;
+}
+.player-item {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.player-item:active { border-color: var(--border-strong); }
+.player-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--bg-elev);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 13px;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+.player-name { flex: 1; font-weight: 500; }
+
+/* ==================== PIN Pad ==================== */
+.pin-display {
+  display: flex; gap: 14px;
+  justify-content: center;
+  margin: 24px 0 20px;
+}
+.pin-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  transition: all 0.15s;
+}
+.pin-dot.filled {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+}
+.pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.pin-key {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  font-size: 22px; font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+}
+.pin-key:active { background: var(--border); }
+.pin-key.action {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* ==================== Ana Uygulama ==================== */
+.main-app {
+  display: none;
+  flex-direction: column;
+  min-height: 100vh; min-height: 100dvh;
+}
+.main-app.active { display: flex; }
+
+.app-header {
+  position: sticky; top: 0;
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex; justify-content: space-between; align-items: center;
+  z-index: 10;
+  padding-top: max(12px, env(safe-area-inset-top));
+}
+.app-header .brand {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500; font-size: 17px;
+}
+.app-header .player-tag {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text-secondary);
+}
+.app-header .player-tag .player-avatar {
+  width: 28px; height: 28px; font-size: 11px;
+}
+
+.app-content {
+  flex: 1;
+  padding: 16px 16px calc(88px + env(safe-area-inset-bottom));
+}
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+.empty-state {
+  text-align: center;
+  padding: 56px 16px;
+  color: var(--text-tertiary);
+}
+.empty-state .emoji {
+  font-size: 48px; display: block; margin-bottom: 12px;
+}
+.empty-state h3 {
+  color: var(--text-primary);
+  font-weight: 500; margin: 0 0 8px;
+  font-size: 18px;
+}
+.empty-state p {
+  font-size: 13px; margin: 0;
+  line-height: 1.5;
+}
+
+/* ==================== Modül Başlığı ==================== */
+.module-header {
+  margin-bottom: 20px;
+}
+.module-header h2 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500;
+  font-size: 22px;
+  margin: 0 0 4px;
+}
+.module-header .sub {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ==================== Gelir Formu ==================== */
+.income-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  margin-bottom: 16px;
+}
+.income-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.income-card-header .title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent-income);
+}
+.income-card-header .meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.form-field {
+  margin-bottom: 14px;
+}
+.form-field label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.form-field label .lbl-tag {
+  font-size: 10px;
+  background: var(--bg-elev);
+  color: var(--text-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.form-field .field-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.input-money {
+  position: relative;
+}
+.input-money .prefix {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  font-size: 15px;
+  pointer-events: none;
+}
+.input-money input {
+  width: 100%;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 14px 14px 32px;
+  color: var(--text-primary);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 17px;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.15s;
+  -moz-appearance: textfield;
+}
+.input-money input::-webkit-outer-spin-button,
+.input-money input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.input-money input:focus {
+  border-color: var(--accent-income);
+}
+
+.input-with-net {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: stretch;
+}
+.net-display {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  min-width: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.net-display .net-label {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.net-display .net-amount {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-income);
+}
+.net-display .net-rate {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.form-field input[type="date"],
+.form-field textarea {
+  width: 100%;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-field input[type="date"]:focus,
+.form-field textarea:focus {
+  border-color: var(--accent-income);
+}
+.form-field textarea {
+  resize: vertical;
+  min-height: 60px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+/* iOS Safari date input rengi */
+.form-field input[type="date"] {
+  color-scheme: dark;
+}
+
+.total-bar {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 18px 0 14px;
+}
+.total-bar .total-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.total-bar .total-value {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--accent-income);
+}
+
+.btn-save {
+  width: 100%;
+  background: var(--accent-income);
+  color: var(--bg-deep);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.15s;
+}
+.btn-save:active { transform: scale(0.98); }
+.btn-save:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.btn-save.dirty {
+  box-shadow: 0 0 0 3px rgba(95, 212, 163, 0.15);
+}
+
+.saved-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--accent-income);
+  font-weight: 500;
+}
+
+/* ==================== Geçmiş Liste ==================== */
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 4px 12px;
+}
+.list-header > span {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+.btn-mini {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.btn-mini:active { background: var(--border); }
+
+.entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.entry-item {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.entry-item:active { background: var(--bg-elev); }
+.entry-item.current {
+  border-color: var(--accent-income);
+  background: rgba(95, 212, 163, 0.04);
+}
+.entry-main {
+  flex: 1;
+  min-width: 0;
+}
+.entry-date {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+.entry-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: ui-monospace, monospace;
+}
+.entry-side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.entry-total {
+  font-family: ui-monospace, monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-income);
+  white-space: nowrap;
+}
+.btn-delete {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-tertiary);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.btn-delete:active {
+  background: rgba(255, 82, 82, 0.1);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.empty-list {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-tertiary);
+  background: var(--bg-panel);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+}
+.empty-list p {
+  font-size: 13px;
+  margin: 0 0 8px;
+}
+.list-more {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  padding: 12px;
+  font-style: italic;
+}
+
+/* ==================== Rapor ==================== */
+.report-section {
+  margin-bottom: 20px;
+}
+.report-section-title {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.year-summary {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.year-summary::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-income), transparent);
+  opacity: 0.5;
+}
+.year-summary .year-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.year-summary .year-net {
+  font-family: ui-monospace, monospace;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--accent-income);
+  margin: 4px 0 8px;
+  letter-spacing: -0.5px;
+}
+.year-summary .year-net.negative { color: var(--danger); }
+.year-summary .year-detail {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.year-summary .year-detail span {
+  font-family: ui-monospace, monospace;
+}
+.year-summary .year-income-val { color: var(--accent-income); }
+.year-summary .year-expense-val { color: var(--accent-expense); }
+
+.month-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.month-item {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.month-item.current {
+  border-color: var(--accent-today);
+  background: rgba(184, 164, 255, 0.04);
+}
+.month-item .month-name {
+  font-weight: 500;
+  font-size: 14px;
+}
+.month-item .month-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  font-family: ui-monospace, monospace;
+}
+.month-item .month-net {
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: right;
+  white-space: nowrap;
+}
+.month-item .month-net.positive { color: var(--accent-income); }
+.month-item .month-net.negative { color: var(--danger); }
+
+.channel-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.channel-bar-row {
+  display: grid;
+  grid-template-columns: 22px 70px 1fr 80px;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+.channel-bar-icon {
+  text-align: center;
+  font-size: 14px;
+}
+.channel-bar-label {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.channel-bar-track {
+  height: 8px;
+  background: var(--bg-deep);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.channel-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+.channel-bar-amount {
+  font-family: ui-monospace, monospace;
+  text-align: right;
+  color: var(--text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.record-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.record-item {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 10px;
+  text-align: center;
+}
+.record-item .record-icon {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+.record-item .record-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.record-item .record-value {
+  font-family: ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--accent-today);
+}
+.record-item .record-date {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-family: ui-monospace, monospace;
+  margin-top: 4px;
+}
+.record-item.expense .record-value { color: var(--accent-expense); }
+.record-item.supplier .record-value { color: var(--accent-supplier); }
+.note-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.note-item {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.note-item:active { border-color: var(--border-strong); }
+.note-item .note-check {
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: var(--bg-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: transparent;
+  margin-top: 1px;
+  transition: all 0.15s;
+}
+.note-item.done .note-check {
+  background: var(--accent-income);
+  border-color: var(--accent-income);
+  color: var(--bg-deep);
+}
+.note-item.done .note-check::before {
+  content: "✓";
+}
+.note-item .note-body {
+  flex: 1;
+  min-width: 0;
+}
+.note-item .note-date {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-family: ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.note-item .note-text {
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin-top: 2px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.note-item.done .note-text {
+  text-decoration: line-through;
+  color: var(--text-tertiary);
+}
+.note-item .note-meta {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}
+.note-item .note-actions {
+  flex-shrink: 0;
+}
+
+/* Bugün sekmesinde notlar bilgi */
+.today-notes {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-more);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+.today-notes:active { background: var(--bg-elev); }
+.today-notes .label {
+  font-size: 13px;
+  font-weight: 500;
+}
+.today-notes .arrow {
+  font-size: 18px;
+  color: var(--text-tertiary);
+}
+.sub-tabs {
+  display: flex;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  margin-bottom: 16px;
+  gap: 2px;
+}
+.sub-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 9px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.sub-tab.active {
+  background: var(--bg-elev);
+  color: var(--text-primary);
+}
+
+.settings-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+.btn-settings {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.btn-settings:active { background: var(--bg-elev); }
+
+/* ==================== Daha Menüsü ==================== */
+.more-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.more-item {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.more-item:active { border-color: var(--border-strong); }
+.more-item .more-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.more-item .more-label { flex: 1; }
+.more-item .more-label .title {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.more-item .more-label .desc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.more-item .more-arrow {
+  font-size: 20px;
+  color: var(--text-tertiary);
+  font-weight: 300;
+}
+.more-item.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.more-item.disabled .lbl-tag {
+  background: var(--bg-deep);
+  color: var(--text-tertiary);
+}
+
+/* ==================== Sütçü ==================== */
+.milk-stats {
+  margin-bottom: 14px;
+}
+.milk-stat-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+}
+.milk-stat-card .stat-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.milk-stat-card .stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+.milk-stat-card .stat-big {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+.milk-stat-card .stat-big small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  margin-left: 2px;
+  letter-spacing: 0;
+}
+.milk-stat-card .stat-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  font-family: ui-monospace, monospace;
+}
+
+.entry-item.milk .entry-total { color: var(--accent-supplier); }
+.debt-summary {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  margin-bottom: 16px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.debt-summary::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-supplier), transparent);
+  opacity: 0.5;
+}
+.debt-summary.zero::before {
+  background: linear-gradient(90deg, var(--success), transparent);
+}
+.debt-summary .label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+.debt-summary .amount {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--accent-supplier);
+  margin: 6px 0 2px;
+  letter-spacing: -0.5px;
+}
+.debt-summary.zero .amount { color: var(--success); }
+.debt-summary .hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.supplier-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.supplier-actions button {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.supplier-actions button:active { background: var(--border); }
+.supplier-actions button.primary {
+  background: var(--accent-supplier);
+  color: var(--bg-deep);
+  border-color: var(--accent-supplier);
+}
+
+.supplier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.supplier-item {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.supplier-item:active { border-color: var(--border-strong); }
+.supplier-item .sup-info {
+  flex: 1;
+  min-width: 0;
+}
+.supplier-item .sup-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.supplier-item .sup-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.supplier-item .sup-balance {
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: right;
+  white-space: nowrap;
+}
+.supplier-item.debt { border-left: 3px solid var(--accent-supplier); }
+.supplier-item.debt .sup-balance { color: var(--accent-supplier); }
+.supplier-item.zero .sup-balance {
+  color: var(--success);
+  font-size: 12px;
+}
+.supplier-item.credit { border-left: 3px solid var(--success); }
+.supplier-item.credit .sup-balance { color: var(--success); }
+
+/* Detay görünümü */
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.btn-back {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.btn-back:active { background: var(--border); }
+.detail-header .info { flex: 1; }
+.detail-header .name {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 20px;
+  font-weight: 500;
+}
+.detail-header .balance-tag {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.detail-header .balance-tag.debt {
+  color: var(--accent-supplier);
+  font-weight: 600;
+}
+.detail-header .balance-tag.zero {
+  color: var(--success);
+}
+
+.tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.tx-item {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 24px 1fr auto 28px;
+  gap: 10px;
+  align-items: center;
+}
+.tx-item .tx-icon {
+  font-size: 16px;
+  text-align: center;
+}
+.tx-item .tx-main {
+  min-width: 0;
+}
+.tx-item .tx-date {
+  font-size: 12px;
+  font-weight: 500;
+}
+.tx-item .tx-note {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tx-item .tx-amount {
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: right;
+  white-space: nowrap;
+}
+.tx-item.purchase .tx-amount { color: var(--accent-supplier); }
+.tx-item.payment .tx-amount { color: var(--accent-income); }
+
+/* Toggle (mal alımı / ödeme) */
+.tx-toggle {
+  display: flex;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+}
+.tx-toggle button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 9px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.tx-toggle button.active.purchase {
+  background: rgba(255, 200, 89, 0.15);
+  color: var(--accent-supplier);
+}
+.tx-toggle button.active.payment {
+  background: rgba(95, 212, 163, 0.15);
+  color: var(--accent-income);
+}
+
+/* Modal içindeki select */
+.modal .form-field select {
+  width: 100%;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+  color-scheme: dark;
+}
+.expense-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  margin-bottom: 16px;
+}
+.expense-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.expense-card-header .title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent-expense);
+}
+.expense-card-header .meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.cat-list {
+  display: flex;
+  flex-direction: column;
+  margin: 4px 0 12px;
+}
+.cat-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 130px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cat-row:last-child { border-bottom: none; }
+.cat-row .cat-icon {
+  font-size: 18px;
+  text-align: center;
+}
+.cat-row .cat-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.cat-row .cat-input {
+  position: relative;
+}
+.cat-row .cat-input .prefix {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  font-size: 13px;
+  pointer-events: none;
+}
+.cat-row .cat-input input {
+  width: 100%;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 10px 9px 22px;
+  color: var(--text-primary);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.15s, color 0.15s;
+  -moz-appearance: textfield;
+}
+.cat-row .cat-input input::-webkit-outer-spin-button,
+.cat-row .cat-input input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.cat-row .cat-input input:focus {
+  border-color: var(--accent-expense);
+}
+.cat-row.has-value .cat-label {
+  color: var(--text-primary);
+}
+.cat-row.has-value .cat-input input {
+  color: var(--accent-expense);
+  border-color: rgba(255, 122, 138, 0.3);
+}
+
+.expense-total-bar {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 14px 0;
+}
+.expense-total-bar .total-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.expense-total-bar .total-value {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--accent-expense);
+}
+
+.btn-save-expense {
+  width: 100%;
+  background: var(--accent-expense);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.15s;
+}
+.btn-save-expense:active { transform: scale(0.98); }
+.btn-save-expense:disabled { opacity: 0.5; cursor: wait; }
+
+/* Gider listesi için (entry-item zaten var, ufak override) */
+.entry-item.expense.current {
+  border-color: var(--accent-expense);
+  background: rgba(255, 122, 138, 0.04);
+}
+.entry-item.expense .entry-total {
+  color: var(--accent-expense);
+}
+.today-hero {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px 20px;
+  text-align: center;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.today-hero::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-today), transparent);
+  opacity: 0.5;
+}
+.today-hero .label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 500;
+}
+.today-hero .amount {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--accent-today);
+  margin: 6px 0 4px;
+  letter-spacing: -1px;
+}
+.today-hero .meta {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.5px;
+}
+
+.today-empty {
+  background: var(--bg-panel);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: 36px 20px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.today-empty .emoji {
+  font-size: 44px;
+  display: block;
+  margin-bottom: 12px;
+}
+.today-empty h3 {
+  font-weight: 500;
+  margin: 0 0 6px;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+.today-empty p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 18px;
+}
+.today-empty .btn-primary {
+  max-width: 260px;
+  margin: 0 auto;
+}
+
+.channel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.channel-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+.channel-card .ch-icon {
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+.channel-card .ch-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.channel-card .ch-value {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+.channel-card .ch-tag {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  letter-spacing: 0.3px;
+}
+
+.cashout-row {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.cashout-row .label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.cashout-row .value {
+  font-family: ui-monospace, monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--warning);
+}
+
+.stat-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+.stat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.stat-card-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.stat-main {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.stat-sub {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: ui-monospace, monospace;
+}
+
+.mini-chart {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 14px 14px;
+  margin-top: 16px;
+}
+.mini-chart-title {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+}
+.mini-chart-title .max {
+  font-family: ui-monospace, monospace;
+  color: var(--text-secondary);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.mini-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 80px;
+}
+.mini-chart-bar {
+  flex: 1;
+  background: var(--bg-elev);
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+  position: relative;
+  transition: opacity 0.15s;
+}
+.mini-chart-bar.has-data {
+  background: var(--accent-income);
+  opacity: 0.6;
+}
+.mini-chart-bar.today {
+  background: var(--accent-today);
+  opacity: 1;
+}
+.mini-chart-bar:active {
+  opacity: 1;
+}
+.mini-chart-labels {
+  display: flex;
+  gap: 3px;
+  margin-top: 6px;
+}
+.mini-chart-labels span {
+  flex: 1;
+  text-align: center;
+  font-size: 9px;
+  color: var(--text-tertiary);
+  font-family: ui-monospace, monospace;
+}
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.15s;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  max-width: 400px;
+  width: 100%;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+.modal h3 {
+  margin: 0 0 12px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500;
+  font-size: 18px;
+}
+.modal p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 8px 0;
+}
+.modal-info {
+  background: rgba(184, 164, 255, 0.06);
+  border: 1px solid rgba(184, 164, 255, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.modal-warn {
+  background: rgba(255, 200, 89, 0.08);
+  border: 1px solid rgba(255, 200, 89, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--warning);
+  margin: 12px 0;
+}
+.modal-warn label {
+  cursor: pointer;
+}
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+}
+.modal-actions button {
+  flex: 1;
+}
+
+.progress-bar {
+  height: 8px;
+  background: var(--bg-deep);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 14px 0 6px;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent-income);
+  width: 0%;
+  transition: width 0.2s;
+}
+#progress-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  font-family: ui-monospace, monospace;
+}
+
+/* ==================== Alt Menü ==================== */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  box-shadow: var(--shadow-up);
+  z-index: 20;
+}
+@media (min-width: 960px) {
+  .bottom-nav {
+    max-width: 960px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+.nav-item {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px;
+  padding: 6px 4px;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  font-size: 10px; font-weight: 500;
+  transition: color 0.15s;
+}
+.nav-item .icon { font-size: 22px; }
+.nav-item[data-tab="today"].active { color: var(--accent-today); }
+.nav-item[data-tab="income"].active { color: var(--accent-income); }
+.nav-item[data-tab="expense"].active { color: var(--accent-expense); }
+.nav-item[data-tab="supplier"].active { color: var(--accent-supplier); }
+.nav-item[data-tab="more"].active { color: var(--accent-more); }
+
+/* ==================== Yardımcılar ==================== */
+.toast {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  left: 50%; transform: translateX(-50%);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  z-index: 100;
+  font-size: 14px;
+  max-width: calc(100% - 32px);
+  animation: toastIn 0.2s;
+}
+.toast.success { border-color: var(--success); }
+.toast.error { border-color: var(--danger); }
+@keyframes toastIn {
+  from { opacity: 0; transform: translate(-50%, -10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--bg-deep);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.setup-warning {
+  background: rgba(255, 200, 89, 0.08);
+  border: 1px solid rgba(255, 200, 89, 0.3);
+  color: var(--warning);
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.version-tag {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  right: 10px;
+  font-size: 9px;
+  color: var(--text-tertiary);
+  background: var(--bg-panel);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  z-index: 5;
+  opacity: 0.5;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ========== LOGIN ========== -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-logo">
+      <span class="emoji">🍦</span>
+      <h1>Orçun Dondurma</h1>
+      <div class="tag">defter</div>
+    </div>
+
+    <div class="login-card">
+      <div id="setup-warning" class="setup-warning" style="display:none;">
+        ⚠️ Firebase yapılandırılmadı. Yapılandırma kurulumunu tamamlayana kadar bağlanılamaz.
+      </div>
+
+      <!-- Adım 1: Cloud ID + Şifre -->
+      <div id="step-room" class="login-step active">
+        <div class="field-group">
+          <div class="field-label">Cloud ID</div>
+          <input id="input-cloudId" class="field-input" type="text" placeholder="orcun_dondurma" autocapitalize="none" autocorrect="off" autocomplete="username" />
+          <div class="field-hint">Dükkânının kimliği. İlk girişte otomatik oluşturulur.</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Şifre</div>
+          <input id="input-password" class="field-input" type="password" placeholder="••••••••" autocomplete="current-password" />
+          <div class="field-hint">Tüm verileri şifreliyor. <strong style="color:var(--warning)">Unutursan veriye erişilemez.</strong></div>
+        </div>
+        <div id="login-error" class="error-msg" style="display:none;"></div>
+        <button id="btn-room" class="btn-primary">Devam et</button>
+      </div>
+
+      <!-- Adım 2: Çalışan listesi -->
+      <div id="step-player" class="login-step">
+        <div class="field-label" style="margin-bottom: 12px;">Kim giriş yapıyor?</div>
+        <div id="player-list" class="player-list"></div>
+        <button id="btn-new-player" class="btn-secondary">+ Yeni çalışan</button>
+        <button id="btn-logout-room" class="btn-secondary" style="margin-top:4px; opacity:0.6;">← Cloud değiştir</button>
+      </div>
+
+      <!-- Adım 2b: Yeni çalışan oluştur -->
+      <div id="step-new-player" class="login-step">
+        <div class="field-group">
+          <div class="field-label">Adın ne?</div>
+          <input id="input-playerName" class="field-input" type="text" placeholder="örn. Orçun" autocapitalize="words" />
+          <div class="field-hint">Eklediğin kayıtlar bu isimle görünecek.</div>
+        </div>
+        <div id="new-player-error" class="error-msg" style="display:none;"></div>
+        <button id="btn-create-player" class="btn-primary">Devam et</button>
+        <button id="btn-back-new-player" class="btn-secondary">← Geri</button>
+      </div>
+
+      <!-- Adım 3: PIN -->
+      <div id="step-pin" class="login-step">
+        <div id="pin-title" class="field-label" style="text-align:center; font-size:13px;">PIN gir</div>
+        <div id="pin-display" class="pin-display">
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+        </div>
+        <div id="pin-error" class="error-msg" style="display:none; text-align:center;"></div>
+        <div class="pin-pad">
+          <div class="pin-key" data-d="1">1</div>
+          <div class="pin-key" data-d="2">2</div>
+          <div class="pin-key" data-d="3">3</div>
+          <div class="pin-key" data-d="4">4</div>
+          <div class="pin-key" data-d="5">5</div>
+          <div class="pin-key" data-d="6">6</div>
+          <div class="pin-key" data-d="7">7</div>
+          <div class="pin-key" data-d="8">8</div>
+          <div class="pin-key" data-d="9">9</div>
+          <div class="pin-key action" data-a="back">‹ Geri</div>
+          <div class="pin-key" data-d="0">0</div>
+          <div class="pin-key action" data-a="clear">sil</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ANA UYGULAMA ========== -->
+  <div id="mainApp" class="main-app">
+    <header class="app-header">
+      <div class="brand">🍦 Orçun Dondurma</div>
+      <div class="player-tag">
+        <span id="current-player-name"></span>
+        <div id="current-player-avatar" class="player-avatar"></div>
+      </div>
+    </header>
+
+    <main class="app-content">
+      <div id="screen-today" class="screen active">
+        <div class="empty-state">
+          <span class="emoji">🏠</span>
+          <h3>Bugün</h3>
+          <p>İskelet hazır. Gelir ve gider eklendikçe (v0.2 ve v0.3) bugünün özeti burada görünecek.</p>
+        </div>
+      </div>
+
+      <div id="screen-income" class="screen">
+        <div id="income-content"></div>
+        <div id="income-list-wrapper" style="margin-top: 20px;"></div>
+      </div>
+
+      <div id="screen-expense" class="screen">
+        <div id="expense-content"></div>
+        <div id="expense-list-wrapper" style="margin-top: 20px;"></div>
+      </div>
+
+      <div id="screen-supplier" class="screen">
+        <div id="supplier-content"></div>
+      </div>
+
+      <div id="screen-more" class="screen">
+        <div id="more-content"></div>
+      </div>
+    </main>
+
+    <nav class="bottom-nav">
+      <div class="nav-item active" data-tab="today">
+        <span class="icon">🏠</span><span>Bugün</span>
+      </div>
+      <div class="nav-item" data-tab="income">
+        <span class="icon">💰</span><span>Gelir</span>
+      </div>
+      <div class="nav-item" data-tab="expense">
+        <span class="icon">💸</span><span>Gider</span>
+      </div>
+      <div class="nav-item" data-tab="supplier">
+        <span class="icon">📦</span><span>Toptancı</span>
+      </div>
+      <div class="nav-item" data-tab="more">
+        <span class="icon">⚙️</span><span>Daha</span>
+      </div>
+    </nav>
+  </div>
+
+  <div class="version-tag">v0.7.0</div>
+</div>
+
+<script type="module">
+// =====================================================================
+// Orçun Dondurma — v0.7.0
+// =====================================================================
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, setDoc, collection, getDocs, onSnapshot,
+  writeBatch, deleteDoc
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+// ==== FIREBASE CONFIG (KULLANICI BURAYI DOLDURACAK) ====
+const firebaseConfig = {
+  apiKey: "AIzaSyDzEcocijqs8KTCCg1CCUe0ejtzAbIcqf8",
+  authDomain: "orcun-dondurma.firebaseapp.com",
+  projectId: "orcun-dondurma",
+  storageBucket: "orcun-dondurma.firebasestorage.app",
+  messagingSenderId: "547619268161",
+  appId: "1:547619268161:web:c8d293968f0a92744e08c0"
+};
+
+let db = null;
+let firebaseReady = false;
+try {
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  firebaseReady = true;
+} catch (e) {
+  console.error("Firebase başlatma hatası:", e);
+}
+
+if (!firebaseReady) {
+  document.getElementById("setup-warning").style.display = "";
+}
+
+// =====================================================================
+// Crypto Modülü
+// =====================================================================
+const Crypto = {
+  deriveKey(password, salt) {
+    return CryptoJS.PBKDF2(password, salt, {
+      keySize: 256 / 32,
+      iterations: 10000
+    }).toString();
+  },
+  encrypt(data, key) {
+    return CryptoJS.AES.encrypt(JSON.stringify(data), key).toString();
+  },
+  decrypt(cipher, key) {
+    try {
+      const bytes = CryptoJS.AES.decrypt(cipher, key);
+      const text = bytes.toString(CryptoJS.enc.Utf8);
+      if (!text) return null;
+      return JSON.parse(text);
+    } catch (e) {
+      return null;
+    }
+  },
+  hashPin(pin, salt) {
+    return CryptoJS.PBKDF2(pin, salt, {
+      keySize: 256 / 32,
+      iterations: 5000
+    }).toString();
+  },
+  randomSalt() {
+    return CryptoJS.lib.WordArray.random(16).toString();
+  }
+};
+
+// =====================================================================
+// State
+// =====================================================================
+const State = {
+  cloudId: null,
+  key: null,
+  player: null,
+  players: [],
+  settings: {},          // cloud-wide ayarlar (default fiyatlar, vb.)
+  settingsUnsub: null
+};
+
+// =====================================================================
+// Sabitler
+// =====================================================================
+const COMMISSION = {
+  getir: 0.38,
+  trendyol: 0.38
+};
+
+// =====================================================================
+// Format yardımcıları
+// =====================================================================
+const fmt = {
+  money(n) {
+    const v = Number(n) || 0;
+    return "₺" + v.toLocaleString("tr-TR", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+  },
+  moneyShort(n) {
+    const v = Number(n) || 0;
+    if (Math.abs(v) >= 1000) {
+      return "₺" + (v / 1000).toFixed(1) + "K";
+    }
+    return "₺" + Math.round(v);
+  },
+  parseNum(s) {
+    if (s === null || s === undefined || s === "") return 0;
+    const clean = String(s).replace(/[^\d.,\-]/g, "").replace(",", ".");
+    const n = parseFloat(clean);
+    return isNaN(n) ? 0 : n;
+  },
+  dateKey(d) {
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  },
+  todayKey() {
+    return this.dateKey(new Date());
+  },
+  dateKeyToDisplay(key) {
+    const months = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran",
+                    "Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+    const days = ["Paz","Pzt","Sal","Çar","Per","Cum","Cmt"];
+    const [y, m, d] = key.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    return `${d} ${months[m - 1]} ${days[date.getDay()]}`;
+  },
+  shortDate(key) {
+    const months = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+    const [, m, d] = key.split("-").map(Number);
+    return `${d} ${months[m - 1]}`;
+  },
+  mondayOfWeek(date) {
+    const d = new Date(date);
+    const day = d.getDay(); // 0=Paz, 1=Pzt...
+    const diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    return this.dateKey(d);
+  },
+  firstOfMonth(date) {
+    const d = new Date(date.getFullYear(), date.getMonth(), 1);
+    return this.dateKey(d);
+  },
+  greeting() {
+    const h = new Date().getHours();
+    if (h < 5) return "İyi geceler";
+    if (h < 12) return "Günaydın";
+    if (h < 18) return "İyi günler";
+    return "İyi akşamlar";
+  }
+};
+
+// =====================================================================
+// UI Yardımcıları
+// =====================================================================
+const UI = {
+  toast(msg, type = "") {
+    const t = document.createElement("div");
+    t.className = "toast " + type;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => {
+      t.style.opacity = "0";
+      t.style.transition = "opacity 0.2s";
+      setTimeout(() => t.remove(), 200);
+    }, 2500);
+  },
+  success(m) { this.toast(m, "success"); },
+  error(m) { this.toast(m, "error"); },
+  showStep(stepId) {
+    document.querySelectorAll(".login-step").forEach(s => {
+      s.classList.toggle("active", s.id === stepId);
+    });
+  },
+  showError(elId, msg) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = "";
+  },
+  hideError(elId) {
+    const el = document.getElementById(elId);
+    if (el) el.style.display = "none";
+  },
+  initials(name) {
+    return name.trim().split(/\s+/).map(s => s[0] || "").join("").slice(0, 2).toUpperCase();
+  }
+};
+
+// =====================================================================
+// Auth Modülü
+// =====================================================================
+const Auth = {
+  async checkRoom(cloudId, password) {
+    const roomRef = doc(db, "broop_app", cloudId);
+    const snap = await getDoc(roomRef);
+
+    if (!snap.exists()) {
+      // Yeni cloud — oluştur
+      const salt = Crypto.randomSalt();
+      const key = Crypto.deriveKey(password, salt);
+      const checkPhrase = Crypto.encrypt({ ok: true, ts: Date.now() }, key);
+
+      await setDoc(roomRef, {
+        salt,
+        checkPhrase,
+        createdAt: Date.now(),
+        appVersion: "0.1.0-alpha1"
+      });
+
+      State.cloudId = cloudId;
+      State.key = key;
+      return { ok: true, isNew: true };
+    }
+
+    // Mevcut cloud — şifreyi dene
+    const data = snap.data();
+    const key = Crypto.deriveKey(password, data.salt);
+    const test = Crypto.decrypt(data.checkPhrase, key);
+
+    if (!test || !test.ok) {
+      return { ok: false, error: "Şifre yanlış" };
+    }
+
+    State.cloudId = cloudId;
+    State.key = key;
+    return { ok: true, isNew: false };
+  },
+
+  async loadPlayers() {
+    const ref = collection(db, "broop_app", State.cloudId, "players");
+    const snap = await getDocs(ref);
+    const players = [];
+    snap.forEach(d => {
+      const raw = d.data();
+      const decrypted = Crypto.decrypt(raw.data, State.key);
+      if (decrypted) {
+        players.push({
+          id: d.id,
+          ...decrypted,
+          pinHash: raw.pinHash,
+          pinSalt: raw.pinSalt
+        });
+      }
+    });
+    State.players = players;
+    return players;
+  },
+
+  async createPlayer(name, pin) {
+    const pinSalt = Crypto.randomSalt();
+    const pinHash = Crypto.hashPin(pin, pinSalt);
+    const payload = { name, createdAt: Date.now() };
+    const ref = doc(db, "broop_app", State.cloudId, "players", name);
+    await setDoc(ref, {
+      data: Crypto.encrypt(payload, State.key),
+      pinSalt,
+      pinHash
+    });
+    return { id: name, ...payload, pinHash, pinSalt };
+  },
+
+  verifyPin(player, pin) {
+    return Crypto.hashPin(pin, player.pinSalt) === player.pinHash;
+  },
+
+  logout() {
+    if (State.settingsUnsub) { State.settingsUnsub(); State.settingsUnsub = null; }
+    State.cloudId = null;
+    State.key = null;
+    State.player = null;
+    State.players = [];
+    State.settings = {};
+    document.getElementById("mainApp").classList.remove("active");
+    document.getElementById("loginScreen").style.display = "";
+    UI.showStep("step-room");
+    document.getElementById("input-cloudId").value = "";
+    document.getElementById("input-password").value = "";
+  }
+};
+
+// =====================================================================
+// Modüller (v0.1'de placeholder, sonraki aşamalarda doldurulacak)
+// =====================================================================
+const Today = {
+  el: null,
+  state: {
+    entries: [],       // income
+    expenseEntries: [],
+    supplierTx: [],
+    notes: [],
+    unsubIncome: null,
+    unsubExpense: null,
+    unsubSupplier: null,
+    unsubNotes: null,
+    everRendered: false
+  },
+
+  start() {
+    this.el = document.getElementById("screen-today");
+    this.renderShell();
+    this.state.everRendered = true;
+    this.attachListeners();
+  },
+
+  stop() {
+    if (this.state.unsubIncome) { this.state.unsubIncome(); this.state.unsubIncome = null; }
+    if (this.state.unsubExpense) { this.state.unsubExpense(); this.state.unsubExpense = null; }
+    if (this.state.unsubSupplier) { this.state.unsubSupplier(); this.state.unsubSupplier = null; }
+    if (this.state.unsubNotes) { this.state.unsubNotes(); this.state.unsubNotes = null; }
+  },
+
+  attachListeners() {
+    if (this.state.unsubIncome) this.state.unsubIncome();
+    if (this.state.unsubExpense) this.state.unsubExpense();
+    if (this.state.unsubSupplier) this.state.unsubSupplier();
+    if (this.state.unsubNotes) this.state.unsubNotes();
+
+    const incomeRef = collection(db, "broop_app", State.cloudId, "income");
+    this.state.unsubIncome = onSnapshot(incomeRef, (snap) => {
+      const entries = [];
+      snap.forEach(d => {
+        const raw = d.data();
+        const decrypted = Crypto.decrypt(raw.data, State.key);
+        if (decrypted) entries.push(decrypted);
+      });
+      entries.sort((a, b) => b.date.localeCompare(a.date));
+      this.state.entries = entries;
+      this.renderBody();
+    }, (err) => console.error("Today income listener:", err));
+
+    const expenseRef = collection(db, "broop_app", State.cloudId, "expense");
+    this.state.unsubExpense = onSnapshot(expenseRef, (snap) => {
+      const entries = [];
+      snap.forEach(d => {
+        const raw = d.data();
+        const decrypted = Crypto.decrypt(raw.data, State.key);
+        if (decrypted) entries.push(decrypted);
+      });
+      entries.sort((a, b) => b.date.localeCompare(a.date));
+      this.state.expenseEntries = entries;
+      this.renderBody();
+    }, (err) => console.error("Today expense listener:", err));
+
+    const supTxRef = collection(db, "broop_app", State.cloudId, "supplierTx");
+    this.state.unsubSupplier = onSnapshot(supTxRef, (snap) => {
+      const list = [];
+      snap.forEach(d => {
+        const raw = d.data();
+        const dec = Crypto.decrypt(raw.data, State.key);
+        if (dec) list.push(dec);
+      });
+      this.state.supplierTx = list;
+      this.renderBody();
+    }, (err) => console.error("Today supplier listener:", err));
+
+    const notesRef = collection(db, "broop_app", State.cloudId, "notes");
+    this.state.unsubNotes = onSnapshot(notesRef, (snap) => {
+      const list = [];
+      snap.forEach(d => {
+        const raw = d.data();
+        const dec = Crypto.decrypt(raw.data, State.key);
+        if (dec) list.push(dec);
+      });
+      this.state.notes = list;
+      this.renderBody();
+    }, (err) => console.error("Today notes listener:", err));
+  },
+
+  renderShell() {
+    const greeting = fmt.greeting();
+    const todayKey = fmt.todayKey();
+    this.el.innerHTML = `
+      <div class="module-header">
+        <h2 style="color: var(--accent-today);">${greeting}, ${escapeHtml(State.player.name)}</h2>
+        <div class="sub">${fmt.dateKeyToDisplay(todayKey)}</div>
+      </div>
+      <div id="today-body"></div>
+    `;
+  },
+
+  renderBody() {
+    const body = document.getElementById("today-body");
+    if (!body) return;
+
+    const todayKey = fmt.todayKey();
+    const today = this.state.entries.find(e => e.date === todayKey);
+    const todayExp = this.state.expenseEntries.find(e => e.date === todayKey);
+
+    const weekStart = fmt.mondayOfWeek(new Date());
+    const monthStart = fmt.firstOfMonth(new Date());
+
+    const weekIncome = this.state.entries.filter(e => e.date >= weekStart && e.date <= todayKey);
+    const weekExp = this.state.expenseEntries.filter(e => e.date >= weekStart && e.date <= todayKey);
+    const monthIncome = this.state.entries.filter(e => e.date >= monthStart && e.date <= todayKey);
+    const monthExp = this.state.expenseEntries.filter(e => e.date >= monthStart && e.date <= todayKey);
+
+    const weekIncomeTotal = weekIncome.reduce((s, e) => s + (e.total || 0), 0);
+    const weekExpTotal = weekExp.reduce((s, e) => s + (e.total || 0), 0);
+    const monthIncomeTotal = monthIncome.reduce((s, e) => s + (e.total || 0), 0);
+    const monthExpTotal = monthExp.reduce((s, e) => s + (e.total || 0), 0);
+
+    const todayIncomeTotal = today ? (today.total || 0) : 0;
+    const todayExpTotal = todayExp ? (todayExp.total || 0) : 0;
+    const todayNet = todayIncomeTotal - todayExpTotal;
+
+    let html = "";
+
+    // === Aktif notlar (varsa, en üstte) ===
+    const activeNotes = this.state.notes.filter(n => !n.done);
+    if (activeNotes.length > 0) {
+      html += `
+        <div class="today-notes" id="today-notes-card">
+          <span class="label">📝 ${activeNotes.length} aktif not</span>
+          <span class="arrow">›</span>
+        </div>
+      `;
+    }
+
+    // === Bugünün satışı ===
+    if (today) {
+      html += `
+        <div class="today-hero">
+          <div class="label">Bugünün Satışı</div>
+          <div class="amount">${fmt.money(today.total)}</div>
+          <div class="meta">son düzenleyen: ${escapeHtml(today.lastEditedBy || today.createdBy || "?")}</div>
+        </div>
+        <div class="channel-grid">
+          <div class="channel-card">
+            <div class="ch-icon">💵</div>
+            <div class="ch-label">Nakit</div>
+            <div class="ch-value">${fmt.money(today.cash || 0)}</div>
+          </div>
+          <div class="channel-card">
+            <div class="ch-icon">💳</div>
+            <div class="ch-label">Kart</div>
+            <div class="ch-value">${fmt.money(today.card || 0)}</div>
+          </div>
+          <div class="channel-card">
+            <div class="ch-icon">🛵</div>
+            <div class="ch-label">Getir</div>
+            <div class="ch-value">${fmt.money(today.getirNet || 0)}</div>
+            ${today.getirGross ? `<div class="ch-tag">brüt ${fmt.money(today.getirGross)}</div>` : ""}
+          </div>
+          <div class="channel-card">
+            <div class="ch-icon">🚚</div>
+            <div class="ch-label">Trendyol</div>
+            <div class="ch-value">${fmt.money(today.trendyolNet || 0)}</div>
+            ${today.trendyolGross ? `<div class="ch-tag">brüt ${fmt.money(today.trendyolGross)}</div>` : ""}
+          </div>
+        </div>
+        ${today.cashOut > 0 ? `
+          <div class="cashout-row">
+            <span class="label">📤 Kasadan çıkan</span>
+            <span class="value">${fmt.money(today.cashOut)}</span>
+          </div>
+        ` : ""}
+      `;
+    } else {
+      html += `
+        <div class="today-empty">
+          <span class="emoji">📭</span>
+          <h3>Bugün için gelir kaydı yok</h3>
+          <p>Günün sonunda gelir bilgilerini ekle.</p>
+          <button class="btn-primary" id="btn-add-today-income">+ Bugünün Gelirini Ekle</button>
+        </div>
+      `;
+    }
+
+    // === Net Kazanç + Gider (eğer en az biri varsa) ===
+    if (today || todayExp) {
+      const netColor = todayNet >= 0 ? "var(--accent-income)" : "var(--danger)";
+      const netSign = todayNet >= 0 ? "" : "−";
+      html += `
+        <div class="stat-card" style="border-color: ${netColor}; border-width: 1.5px;">
+          <div class="stat-card-header">
+            <span>Bugünün Net Kazancı</span>
+            <span style="color: var(--text-tertiary);">satış − gider</span>
+          </div>
+          <div class="stat-card-body">
+            <div class="stat-main" style="color: ${netColor}; font-size: 26px;">
+              ${netSign}${fmt.money(Math.abs(todayNet))}
+            </div>
+            <div class="stat-sub" style="text-align: right;">
+              <div>+ ${fmt.money(todayIncomeTotal)}</div>
+              <div style="color: var(--accent-expense);">− ${fmt.money(todayExpTotal)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // === Toptancı borcu (varsa) ===
+    const totalDebt = this.computeTotalDebt();
+    if (totalDebt > 0.01) {
+      html += `
+        <div class="stat-card" id="today-debt-card" style="border-color: var(--accent-supplier); cursor: pointer;">
+          <div class="stat-card-header">
+            <span>📦 Toptancı Borcu</span>
+            <span style="color: var(--text-tertiary);">tıkla →</span>
+          </div>
+          <div class="stat-card-body">
+            <div class="stat-main" style="color: var(--accent-supplier); font-size: 22px;">
+              ${fmt.money(totalDebt)}
+            </div>
+            <div class="stat-sub">${this.countDebtors()} toptancıya</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // === Bu hafta ===
+    const weekDays = Math.max(weekIncome.length, 1);
+    const weekNet = weekIncomeTotal - weekExpTotal;
+    html += `
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span>Bu Hafta · ${weekIncome.length} gün satış</span>
+        </div>
+        <div class="stat-card-body" style="flex-direction: column; align-items: stretch; gap: 6px;">
+          <div style="display: flex; justify-content: space-between;">
+            <span class="stat-sub">Satış</span>
+            <span class="stat-sub" style="color: var(--accent-income); font-weight: 600;">${fmt.money(weekIncomeTotal)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span class="stat-sub">Gider</span>
+            <span class="stat-sub" style="color: var(--accent-expense); font-weight: 600;">− ${fmt.money(weekExpTotal)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding-top: 6px; border-top: 1px solid var(--border);">
+            <span style="font-size: 12px; font-weight: 500;">Net</span>
+            <span style="font-family: ui-monospace, monospace; font-weight: 600; color: ${weekNet >= 0 ? 'var(--accent-income)' : 'var(--danger)'};">
+              ${weekNet >= 0 ? '' : '−'}${fmt.money(Math.abs(weekNet))}
+            </span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // === Bu ay ===
+    const monthName = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran",
+                      "Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"][new Date().getMonth()];
+    const monthNet = monthIncomeTotal - monthExpTotal;
+    html += `
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <span>${monthName} · ${monthIncome.length} gün satış</span>
+        </div>
+        <div class="stat-card-body" style="flex-direction: column; align-items: stretch; gap: 6px;">
+          <div style="display: flex; justify-content: space-between;">
+            <span class="stat-sub">Satış</span>
+            <span class="stat-sub" style="color: var(--accent-income); font-weight: 600;">${fmt.money(monthIncomeTotal)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span class="stat-sub">Gider</span>
+            <span class="stat-sub" style="color: var(--accent-expense); font-weight: 600;">− ${fmt.money(monthExpTotal)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding-top: 6px; border-top: 1px solid var(--border);">
+            <span style="font-size: 12px; font-weight: 500;">Net</span>
+            <span style="font-family: ui-monospace, monospace; font-weight: 600; color: ${monthNet >= 0 ? 'var(--accent-income)' : 'var(--danger)'};">
+              ${monthNet >= 0 ? '' : '−'}${fmt.money(Math.abs(monthNet))}
+            </span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // === Son 14 gün chart ===
+    html += this.renderMiniChart();
+
+    body.innerHTML = html;
+
+    const addBtn = document.getElementById("btn-add-today-income");
+    if (addBtn) {
+      addBtn.addEventListener("click", () => App.switchTab("income"));
+    }
+
+    const debtCard = document.getElementById("today-debt-card");
+    if (debtCard) {
+      debtCard.addEventListener("click", () => App.switchTab("supplier"));
+    }
+
+    const notesCard = document.getElementById("today-notes-card");
+    if (notesCard) {
+      notesCard.addEventListener("click", () => {
+        App.switchTab("more");
+        setTimeout(() => {
+          if (More.goTo) More.goTo("notes");
+        }, 50);
+      });
+    }
+
+    body.querySelectorAll(".mini-chart-bar[data-date]").forEach(bar => {
+      bar.addEventListener("click", () => {
+        const date = bar.dataset.date;
+        if (date) {
+          App.switchTab("income");
+          setTimeout(() => {
+            const dateInput = document.getElementById("inp-date");
+            if (dateInput && Income.changeDate) {
+              Income.changeDate(date);
+              dateInput.value = date;
+            }
+          }, 50);
+        }
+      });
+    });
+  },
+
+  renderMiniChart() {
+    const today = new Date();
+    const days = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = fmt.dateKey(d);
+      const entry = this.state.entries.find(e => e.date === key);
+      days.push({
+        key, date: d,
+        total: entry ? (entry.total || 0) : 0,
+        isToday: i === 0
+      });
+    }
+
+    const max = Math.max(...days.map(d => d.total), 1);
+    const maxLabel = max > 1 ? fmt.moneyShort(max) : "";
+
+    let bars = "";
+    days.forEach(d => {
+      const heightPct = (d.total / max) * 100;
+      const cls = d.isToday ? "today" : (d.total > 0 ? "has-data" : "");
+      const title = `${fmt.dateKeyToDisplay(d.key)}: ${fmt.money(d.total)}`;
+      bars += `<div class="mini-chart-bar ${cls}" data-date="${d.key}" style="height: ${Math.max(heightPct, 2)}%;" title="${title}"></div>`;
+    });
+
+    let labels = "";
+    days.forEach((d, i) => {
+      const showLabel = i % 3 === 0 || d.isToday;
+      labels += `<span>${showLabel ? d.date.getDate() : ""}</span>`;
+    });
+
+    return `
+      <div class="mini-chart">
+        <div class="mini-chart-title">
+          <span>Son 14 Gün Satış</span>
+          ${maxLabel ? `<span class="max">max ${maxLabel}</span>` : ""}
+        </div>
+        <div class="mini-chart-bars">${bars}</div>
+        <div class="mini-chart-labels">${labels}</div>
+      </div>
+    `;
+  },
+
+  // Toplam borç ve borçlu toptancı sayısı
+  computeTotalDebt() {
+    const byId = {};
+    this.state.supplierTx.forEach(t => {
+      if (!byId[t.supplierId]) byId[t.supplierId] = 0;
+      byId[t.supplierId] += t.type === "purchase" ? t.amount : -t.amount;
+    });
+    let total = 0;
+    Object.values(byId).forEach(v => { if (v > 0) total += v; });
+    return total;
+  },
+
+  countDebtors() {
+    const byId = {};
+    this.state.supplierTx.forEach(t => {
+      if (!byId[t.supplierId]) byId[t.supplierId] = 0;
+      byId[t.supplierId] += t.type === "purchase" ? t.amount : -t.amount;
+    });
+    return Object.values(byId).filter(v => v > 0.01).length;
+  }
+};
+
+// =====================================================================
+// Excel'den gömülü geçmiş gelir verileri (one-time import için)
+// Sıralama: [date, cash, card, cashOut, getirGross, getirNet, trendyolGross, trendyolNet, total, note]
+// =====================================================================
+const EXCEL_IMPORT_DATA = [["2026-03-02",3715.0,0,0,0,0.0,0,0.0,3715.0,""],["2026-03-04",2050.0,0,0,0,0.0,0,0.0,2050.0,""],["2026-03-05",2675.0,0,0,0,0.0,0,0.0,2675.0,""],["2026-03-06",1885.0,0,0,0,0.0,0,0.0,1885.0,""],["2026-03-07",2140.0,0,0,0,0.0,0,0.0,2140.0,""],["2026-03-08",785.0,0,0,0,0.0,0,0.0,785.0,""],["2026-03-09",910.0,0,0,0,0.0,0,0.0,910.0,""],["2026-03-10",1280.0,0,0,0,0.0,0,0.0,1280.0,""],["2026-03-11",1950.0,0,0,0,0.0,0,0.0,1950.0,""],["2026-03-12",1500.0,0,0,0,0.0,0,0.0,1500.0,""],["2026-03-13",1400.0,0,0,0,0.0,0,0.0,1400.0,""],["2026-03-14",2010.0,0,0,0,0.0,0,0.0,2010.0,""],["2026-03-15",1575.0,0,0,0,0.0,0,0.0,1575.0,""],["2026-03-17",370.0,0,0,0,0.0,0,0.0,370.0,""],["2026-03-18",450.0,0,0,0,0.0,0,0.0,450.0,""],["2026-03-24",650.0,0,0,0,0.0,0,0.0,650.0,""],["2026-03-25",3395.0,0,0,0,0.0,0,0.0,3395.0,""],["2026-03-26",3510.0,0,0,0,0.0,0,0.0,3510.0,""],["2026-03-27",7820.0,0,0,0,0.0,0,0.0,7820.0,""],["2026-03-28",680.0,0,0,0,0.0,0,0.0,680.0,""],["2026-03-29",475.0,0,0,0,0.0,0,0.0,475.0,""],["2026-03-31",4640.0,0,0,0,0.0,0,0.0,4640.0,""],["2026-04-01",2720.0,0,0,0,0.0,0,0.0,2720.0,""],["2026-04-03",8480.0,0,0,0,0.0,0,0.0,8480.0,""],["2026-04-04",2090.0,0,0,0,0.0,0,0.0,2090.0,""],["2026-04-05",20100.0,0,0,0,0.0,0,0.0,20100.0,""],["2026-04-06",9883.0,0,0,0,0.0,0,0.0,9883.0,""],["2026-04-07",9450.0,0,0,0,0.0,0,0.0,9450.0,""],["2026-04-08",2090.0,0,0,0,0.0,0,0.0,2090.0,""],["2026-04-09",6100.0,0,0,0,0.0,0,0.0,6100.0,""],["2026-04-10",400.0,0,0,0,0.0,0,0.0,400.0,""],["2026-04-11",3560.0,0,0,0,0.0,0,0.0,3560.0,""],["2026-04-12",8797.0,0,0,0,0.0,0,0.0,8797.0,""],["2026-04-13",6574.0,0,0,0,0.0,0,0.0,6574.0,""],["2026-04-14",8299.0,0,0,0,0.0,0,0.0,8299.0,""],["2026-04-15",6923.0,0,0,0,0.0,0,0.0,6923.0,""],["2026-04-16",8380.0,0,0,0,0.0,0,0.0,8380.0,""],["2026-04-17",4885.0,0,0,0,0.0,0,0.0,4885.0,""],["2026-04-18",5390.0,0,0,0,0.0,0,0.0,5390.0,""],["2026-04-19",8892.0,6365.0,0,0,0.0,0,0.0,15257.0,""],["2026-04-20",7675.0,5930.0,0.0,690.0,441.6,0.0,0.0,14046.6,""],["2026-04-21",4135.0,2220.0,0.0,0,0.0,345.0,213.9,6568.9,""],["2026-04-23",5400.0,3640.0,0.0,605.0,387.2,345.0,213.9,9641.1,""],["2026-04-24",8800.0,7425.0,0,517.5,331.2,1845.0,1143.9,17700.1,""],["2026-04-25",11660.0,11775.0,0,250.0,160.0,1380.0,855.6,24450.6,""],["2026-04-26",17650.0,15190.0,0,2202.5,1409.6,517.5,320.85,34570.45,""],["2026-04-27",4775.0,3615.0,0,1125.0,720.0,345.0,213.9,9323.9,""],["2026-04-28",5110.0,3295.0,470.0,1937.5,1240.0,0.0,0.0,10115.0,""],["2026-04-29",7280.0,5605.0,0,517.5,331.2,345.0,213.9,13430.1,""],["2026-04-30",3495.0,3185.0,0.0,0,0.0,250.0,155.0,6835.0,""],["2026-05-01",2300.0,320.0,0.0,280.0,179.2,690.0,427.8,3227.0,""],["2026-05-02",750.0,0,0,0,0.0,0,0.0,750.0,""],["2026-05-04",2475.0,900.0,0.0,345.0,220.8,0,0.0,3595.8,""],["2026-05-05",6650.0,5845.0,0.0,385.0,246.4,1035.0,641.7,13383.1,""],["2026-05-06",5800.0,9240.0,0,725.0,464.0,0,0.0,15504.0,""],["2026-05-07",10500.0,11275.0,105.0,1420.0,908.8,3090.0,1915.8,24704.6,""],["2026-05-08",11500.0,9760.0,40.0,345.0,220.8,345.0,213.9,21734.7,""],["2026-05-09",9900.0,9690.0,0,0,0.0,0,0.0,19590.0,""],["2026-05-10",22600.0,20010.0,0,1802.5,1153.6,2340.0,1450.8,45214.4,""],["2026-05-11",12900.0,15645.0,0,0,0.0,1115.0,691.3,29236.3,""],["2026-05-12",13600.0,9215.0,2900.0,1552.5,993.6,1035.0,641.7,27350.3,""],["2026-05-13",14700.0,11785.0,200.0,1115.0,713.6,1185.0,734.7,28133.3,""],["2026-05-14",4400.0,2535.0,200.0,270.0,172.8,395.0,244.9,7552.7,""],["2026-05-15",12550.0,12170.0,0,1185.0,758.4,3327.5,2063.05,27541.45,""]];
+
+const Income = {
+  formEl: null,
+  listEl: null,
+  state: {
+    date: null,
+    entries: [],         // Tüm gelir kayıtları (decrypted)
+    form: null,          // Şu anki form değerleri
+    dirty: false,        // Kullanıcı düzenliyor mu
+    saving: false,
+    unsub: null,
+    everRendered: false
+  },
+
+  start() {
+    this.formEl = document.getElementById("income-content");
+    this.listEl = document.getElementById("income-list-wrapper");
+    if (!this.state.everRendered) {
+      this.state.date = fmt.todayKey();
+      this.state.form = this.emptyForm(this.state.date);
+    }
+    this.renderShell();
+    this.state.everRendered = true;
+    this.attachListener();
+  },
+
+  stop() {
+    if (this.state.unsub) {
+      this.state.unsub();
+      this.state.unsub = null;
+    }
+  },
+
+  emptyForm(date) {
+    return {
+      date, cash: "", card: "", getir: "",
+      trendyol: "", cashOut: "", note: ""
+    };
+  },
+
+  entryToForm(entry, date) {
+    return {
+      date,
+      cash: entry.cash ? String(entry.cash) : "",
+      card: entry.card ? String(entry.card) : "",
+      getir: entry.getirGross ? String(entry.getirGross) : "",
+      trendyol: entry.trendyolGross ? String(entry.trendyolGross) : "",
+      cashOut: entry.cashOut ? String(entry.cashOut) : "",
+      note: entry.note || ""
+    };
+  },
+
+  attachListener() {
+    if (this.state.unsub) this.state.unsub();
+    const ref = collection(db, "broop_app", State.cloudId, "income");
+    this.state.unsub = onSnapshot(ref, (snap) => {
+      const entries = [];
+      snap.forEach(d => {
+        const raw = d.data();
+        const decrypted = Crypto.decrypt(raw.data, State.key);
+        if (decrypted) {
+          entries.push({ id: d.id, ...decrypted });
+        }
+      });
+      entries.sort((a, b) => b.date.localeCompare(a.date));
+      this.state.entries = entries;
+
+      // Seçili tarihin entry'sini bul, form'u güncelle (dirty değilse)
+      const current = entries.find(e => e.date === this.state.date);
+      if (!this.state.dirty) {
+        this.state.form = current
+          ? this.entryToForm(current, this.state.date)
+          : this.emptyForm(this.state.date);
+        this.renderFormFields();
+      }
+      this.recalcDisplays();
+      this.updateMeta();
+      this.renderList();
+    }, (err) => {
+      console.error("Listener hatası:", err);
+      UI.error("Veri senkronizasyon hatası");
+    });
+  },
+
+  getCurrentEntry() {
+    return this.state.entries.find(e => e.date === this.state.date);
+  },
+
+  renderShell() {
+    this.formEl.innerHTML = `
+      <div class="module-header">
+        <h2 style="color: var(--accent-income);">💰 Gelir</h2>
+        <div class="sub">Günlük satış girişi</div>
+      </div>
+      <div class="income-card">
+        <div class="income-card-header">
+          <div class="title" id="inc-card-title">Gün ekle</div>
+          <div class="meta" id="inc-card-meta"></div>
+        </div>
+
+        <div class="form-field">
+          <label>Tarih</label>
+          <input type="date" id="inp-date" value="${this.state.form.date}" />
+        </div>
+
+        <div class="form-field">
+          <label>Nakit Satış</label>
+          <div class="input-money">
+            <span class="prefix">₺</span>
+            <input type="text" inputmode="decimal" id="inp-cash" placeholder="0" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Kredi Kartı</label>
+          <div class="input-money">
+            <span class="prefix">₺</span>
+            <input type="text" inputmode="decimal" id="inp-card" placeholder="0" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Getir <span class="lbl-tag">brüt</span></label>
+          <div class="input-with-net">
+            <div class="input-money">
+              <span class="prefix">₺</span>
+              <input type="text" inputmode="decimal" id="inp-getir" placeholder="0" autocomplete="off" />
+            </div>
+            <div class="net-display">
+              <div class="net-label">Sana kalan</div>
+              <div class="net-amount" id="getir-net">₺0</div>
+              <div class="net-rate">%${COMMISSION.getir * 100} sonrası</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Trendyol Go <span class="lbl-tag">brüt</span></label>
+          <div class="input-with-net">
+            <div class="input-money">
+              <span class="prefix">₺</span>
+              <input type="text" inputmode="decimal" id="inp-trendyol" placeholder="0" autocomplete="off" />
+            </div>
+            <div class="net-display">
+              <div class="net-label">Sana kalan</div>
+              <div class="net-amount" id="trendyol-net">₺0</div>
+              <div class="net-rate">%${COMMISSION.trendyol * 100} sonrası</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Kasadan Çıkan</label>
+          <div class="input-money">
+            <span class="prefix">₺</span>
+            <input type="text" inputmode="decimal" id="inp-cashout" placeholder="0" autocomplete="off" />
+          </div>
+          <div class="field-hint">Satıştan alınan, yerine konulmayan para</div>
+        </div>
+
+        <div class="form-field">
+          <label>Not <span class="lbl-tag">opsiyonel</span></label>
+          <textarea id="inp-note" placeholder="..." rows="2"></textarea>
+        </div>
+
+        <div class="total-bar">
+          <span class="total-label">Toplam Satış</span>
+          <span class="total-value" id="total-display">₺0</span>
+        </div>
+
+        <button id="btn-save-income" class="btn-save">Kaydet</button>
+      </div>
+    `;
+
+    // Form event listeners
+    document.getElementById("inp-date").addEventListener("change", (e) => {
+      this.changeDate(e.target.value);
+    });
+
+    [["cash","inp-cash"], ["card","inp-card"], ["getir","inp-getir"],
+     ["trendyol","inp-trendyol"], ["cashOut","inp-cashout"], ["note","inp-note"]
+    ].forEach(([key, id]) => {
+      const el = document.getElementById(id);
+      el.addEventListener("input", () => this.onFieldChange(key, el.value));
+    });
+
+    document.getElementById("btn-save-income").addEventListener("click", () => this.save());
+
+    this.renderFormFields();
+    this.recalcDisplays();
+    this.updateMeta();
+  },
+
+  renderFormFields() {
+    const f = this.state.form;
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && el.value !== String(val)) el.value = val;
+    };
+    setVal("inp-date", f.date);
+    setVal("inp-cash", f.cash);
+    setVal("inp-card", f.card);
+    setVal("inp-getir", f.getir);
+    setVal("inp-trendyol", f.trendyol);
+    setVal("inp-cashout", f.cashOut);
+    setVal("inp-note", f.note);
+  },
+
+  onFieldChange(key, value) {
+    this.state.form[key] = value;
+    this.state.dirty = true;
+    this.recalcDisplays();
+    this.updateSaveButton();
+  },
+
+  changeDate(newDate) {
+    if (!newDate) return;
+    if (this.state.dirty) {
+      if (!confirm("Kaydedilmemiş değişiklikler var. Tarih değişsin ve kaybolsunlar mı?")) {
+        document.getElementById("inp-date").value = this.state.date;
+        return;
+      }
+    }
+    this.state.date = newDate;
+    this.state.dirty = false;
+    const current = this.state.entries.find(e => e.date === newDate);
+    this.state.form = current ? this.entryToForm(current, newDate) : this.emptyForm(newDate);
+    this.renderFormFields();
+    this.recalcDisplays();
+    this.updateMeta();
+    this.renderList();
+  },
+
+  recalcDisplays() {
+    const f = this.state.form;
+    const cash = fmt.parseNum(f.cash);
+    const card = fmt.parseNum(f.card);
+    const getirGross = fmt.parseNum(f.getir);
+    const trendyolGross = fmt.parseNum(f.trendyol);
+    const cashOut = fmt.parseNum(f.cashOut);
+
+    const getirNet = getirGross * (1 - COMMISSION.getir);
+    const trendyolNet = trendyolGross * (1 - COMMISSION.trendyol);
+    const total = cash + card + getirNet + trendyolNet + cashOut;
+
+    const gNet = document.getElementById("getir-net");
+    const tNet = document.getElementById("trendyol-net");
+    const totEl = document.getElementById("total-display");
+    if (gNet) gNet.textContent = fmt.money(getirNet);
+    if (tNet) tNet.textContent = fmt.money(trendyolNet);
+    if (totEl) totEl.textContent = fmt.money(total);
+  },
+
+  updateMeta() {
+    const titleEl = document.getElementById("inc-card-title");
+    const metaEl = document.getElementById("inc-card-meta");
+    if (!titleEl) return;
+
+    const display = fmt.dateKeyToDisplay(this.state.date);
+    const current = this.getCurrentEntry();
+    if (current) {
+      titleEl.textContent = display + " · düzenle";
+      const by = current.lastEditedBy || current.createdBy || "?";
+      const imp = current.importedFromExcel ? " (excel)" : "";
+      metaEl.textContent = `son: ${by}${imp}`;
+    } else {
+      titleEl.textContent = display + " · yeni kayıt";
+      metaEl.textContent = "";
+    }
+    this.updateSaveButton();
+  },
+
+  updateSaveButton() {
+    const btn = document.getElementById("btn-save-income");
+    if (!btn) return;
+    if (this.state.saving) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Kaydediliyor...';
+      return;
+    }
+    btn.disabled = false;
+    btn.classList.toggle("dirty", this.state.dirty);
+    const current = this.getCurrentEntry();
+    if (current && !this.state.dirty) {
+      btn.textContent = "✓ Kaydedildi";
+      btn.style.background = "var(--bg-elev)";
+      btn.style.color = "var(--text-secondary)";
+    } else if (current && this.state.dirty) {
+      btn.textContent = "Güncelle";
+      btn.style.background = "var(--accent-income)";
+      btn.style.color = "var(--bg-deep)";
+    } else {
+      btn.textContent = "Kaydet";
+      btn.style.background = "var(--accent-income)";
+      btn.style.color = "var(--bg-deep)";
+    }
+  },
+
+  async save() {
+    if (this.state.saving) return;
+    const f = this.state.form;
+
+    const cash = fmt.parseNum(f.cash);
+    const card = fmt.parseNum(f.card);
+    const getirGross = fmt.parseNum(f.getir);
+    const trendyolGross = fmt.parseNum(f.trendyol);
+    const cashOut = fmt.parseNum(f.cashOut);
+
+    if (cash === 0 && card === 0 && getirGross === 0 && trendyolGross === 0 && cashOut === 0 && !f.note.trim()) {
+      UI.error("Boş kayıt kaydedilemez");
+      return;
+    }
+
+    this.state.saving = true;
+    this.updateSaveButton();
+
+    try {
+      const getirNet = getirGross * (1 - COMMISSION.getir);
+      const trendyolNet = trendyolGross * (1 - COMMISSION.trendyol);
+      const total = cash + card + getirNet + trendyolNet + cashOut;
+
+      const now = Date.now();
+      const current = this.getCurrentEntry();
+      const isNew = !current;
+
+      const data = {
+        date: f.date,
+        cash, card,
+        getirGross, getirNet,
+        trendyolGross, trendyolNet,
+        cashOut, total,
+        note: f.note.trim(),
+        commissionRates: { getir: COMMISSION.getir, trendyol: COMMISSION.trendyol },
+        createdBy: isNew ? State.player.name : (current.createdBy || State.player.name),
+        createdAt: isNew ? now : (current.createdAt || now),
+        lastEditedBy: State.player.name,
+        updatedAt: now
+      };
+
+      const ref = doc(db, "broop_app", State.cloudId, "income", f.date);
+      await setDoc(ref, {
+        data: Crypto.encrypt(data, State.key),
+        date: f.date,
+        updatedAt: now
+      });
+
+      this.state.dirty = false;
+      UI.success(isNew ? "Eklendi ✓" : "Güncellendi ✓");
+    } catch (e) {
+      console.error("Kaydetme hatası:", e);
+      UI.error("Kaydedilemedi: " + e.message);
+    } finally {
+      this.state.saving = false;
+      this.updateSaveButton();
+    }
+  },
+
+  // =================== LİSTE ===================
+  renderList() {
+    if (!this.listEl) return;
+    const entries = this.state.entries;
+
+    if (entries.length === 0) {
+      this.listEl.innerHTML = `
+        <div class="empty-list">
+          <p>Henüz geçmiş kayıt yok.</p>
+          <button id="btn-show-import" class="btn-secondary" style="margin-top:8px; max-width: 280px;">
+            📥 Eski Excel verilerini içe aktar
+          </button>
+        </div>
+      `;
+      const btn = document.getElementById("btn-show-import");
+      if (btn) btn.addEventListener("click", () => this.showImport());
+      return;
+    }
+
+    const visibleCount = Math.min(30, entries.length);
+    let html = `
+      <div class="list-header">
+        <span>Geçmiş günler (${entries.length})</span>
+        <button id="btn-show-import" class="btn-mini">📥 Excel'den içe aktar</button>
+      </div>
+      <div class="entry-list">
+    `;
+    entries.slice(0, visibleCount).forEach(e => {
+      const isCurrent = e.date === this.state.date;
+      const parts = [];
+      if (e.cash) parts.push(`nakit ${fmt.money(e.cash)}`);
+      if (e.card) parts.push(`kart ${fmt.money(e.card)}`);
+      if (e.getirGross) parts.push(`getir ${fmt.money(e.getirGross)}`);
+      if (e.trendyolGross) parts.push(`trendyol ${fmt.money(e.trendyolGross)}`);
+      if (e.cashOut) parts.push(`kasadan ${fmt.money(e.cashOut)}`);
+      html += `
+        <div class="entry-item ${isCurrent ? 'current' : ''}" data-date="${e.date}">
+          <div class="entry-main">
+            <div class="entry-date">${fmt.dateKeyToDisplay(e.date)}</div>
+            <div class="entry-meta">${parts.slice(0, 3).map(p => `<span>${p}</span>`).join("")}${parts.length > 3 ? `<span>+${parts.length-3}</span>` : ""}</div>
+          </div>
+          <div class="entry-side">
+            <div class="entry-total">${fmt.money(e.total)}</div>
+            <button class="btn-delete" data-date="${e.date}" title="Sil">×</button>
+          </div>
+        </div>
+      `;
+    });
+    html += "</div>";
+
+    if (entries.length > visibleCount) {
+      html += `<div class="list-more">+ ${entries.length - visibleCount} eski kayıt daha</div>`;
+    }
+
+    this.listEl.innerHTML = html;
+
+    // Liste tıklamaları
+    this.listEl.querySelectorAll(".entry-item").forEach(item => {
+      item.addEventListener("click", (ev) => {
+        if (ev.target.classList.contains("btn-delete")) return;
+        const date = item.dataset.date;
+        this.changeDate(date);
+        const inp = document.getElementById("inp-date");
+        if (inp) inp.value = date;
+        // Forma scroll
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    });
+
+    this.listEl.querySelectorAll(".btn-delete").forEach(btn => {
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        this.confirmDelete(btn.dataset.date);
+      });
+    });
+
+    const impBtn = document.getElementById("btn-show-import");
+    if (impBtn) impBtn.addEventListener("click", () => this.showImport());
+  },
+
+  async confirmDelete(date) {
+    const entry = this.state.entries.find(e => e.date === date);
+    if (!entry) return;
+
+    const msg1 = `${fmt.dateKeyToDisplay(date)} kaydını silmek istediğine emin misin?\nToplam: ${fmt.money(entry.total)}`;
+    if (!confirm(msg1)) return;
+
+    const msg2 = "Bu işlem GERİ ALINAMAZ. Gerçekten sil?";
+    if (!confirm(msg2)) return;
+
+    try {
+      const ref = doc(db, "broop_app", State.cloudId, "income", date);
+      await deleteDoc(ref);
+      UI.success("Silindi");
+    } catch (e) {
+      console.error(e);
+      UI.error("Silinemedi: " + e.message);
+    }
+  },
+
+  // =================== EXCEL IMPORT ===================
+  showImport() {
+    const data = EXCEL_IMPORT_DATA;
+    const existing = new Set(this.state.entries.map(e => e.date));
+    const newOnes = data.filter(row => !existing.has(row[0]));
+    const conflicts = data.filter(row => existing.has(row[0]));
+
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop";
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>Excel'den İçe Aktar</h3>
+        <p class="modal-info">
+          Excel dosyandan <strong>${data.length}</strong> gelir kaydı buldum
+          (${data[0][0]} → ${data[data.length-1][0]} arası).
+        </p>
+        ${conflicts.length > 0 ? `
+          <div class="modal-warn">
+            ⚠️ ${conflicts.length} tarihte zaten kayıt var.
+            <label style="display:block; margin-top:8px; color: var(--text-primary);">
+              <input type="checkbox" id="import-overwrite" style="margin-right:6px;" />
+              Üzerine yaz (mevcut veriyi sil ve Excel'dekini koy)
+            </label>
+          </div>
+        ` : ""}
+        <p>Yüklenecek: <strong id="import-count">${newOnes.length}</strong> kayıt</p>
+        <div id="import-progress" style="display:none;">
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <div id="progress-text">0 / 0</div>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-import-cancel" class="btn-secondary">İptal</button>
+          <button id="btn-import-confirm" class="btn-primary">İçe Aktar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const ow = document.getElementById("import-overwrite");
+    if (ow) {
+      ow.addEventListener("change", () => {
+        const count = ow.checked ? data.length : newOnes.length;
+        document.getElementById("import-count").textContent = count;
+      });
+    }
+
+    document.getElementById("btn-import-cancel").addEventListener("click", () => {
+      modal.remove();
+    });
+
+    document.getElementById("btn-import-confirm").addEventListener("click", async () => {
+      const overwrite = ow && ow.checked;
+      const toImport = overwrite ? data : newOnes;
+      if (toImport.length === 0) {
+        UI.error("Yüklenecek kayıt yok");
+        return;
+      }
+      await this.runImport(toImport, modal);
+    });
+  },
+
+  async runImport(rows, modal) {
+    modal.querySelector("#import-progress").style.display = "";
+    modal.querySelector("#btn-import-confirm").disabled = true;
+    modal.querySelector("#btn-import-cancel").disabled = true;
+
+    const total = rows.length;
+    let done = 0;
+    const now = Date.now();
+    const player = State.player.name;
+
+    try {
+      const chunkSize = 50;
+      for (let i = 0; i < rows.length; i += chunkSize) {
+        const chunk = rows.slice(i, i + chunkSize);
+        const batch = writeBatch(db);
+
+        chunk.forEach(row => {
+          const [date, cash, card, cashOut, getirGross, getirNet, trendyolGross, trendyolNet, total, note] = row;
+          // Excel'deki net'ten ters mühendislikle komisyon oranını bul (tarihsel veri korunsun)
+          const getirRate = getirGross > 0 ? +(1 - getirNet / getirGross).toFixed(3) : COMMISSION.getir;
+          const trendyolRate = trendyolGross > 0 ? +(1 - trendyolNet / trendyolGross).toFixed(3) : COMMISSION.trendyol;
+
+          const data = {
+            date,
+            cash: +cash, card: +card,
+            getirGross: +getirGross, getirNet: +getirNet,
+            trendyolGross: +trendyolGross, trendyolNet: +trendyolNet,
+            cashOut: +cashOut, total: +total,
+            note: note || "",
+            commissionRates: { getir: getirRate, trendyol: trendyolRate },
+            createdBy: player,
+            createdAt: now,
+            lastEditedBy: player,
+            updatedAt: now,
+            importedFromExcel: true
+          };
+          const ref = doc(db, "broop_app", State.cloudId, "income", date);
+          batch.set(ref, {
+            data: Crypto.encrypt(data, State.key),
+            date,
+            updatedAt: now
+          });
+        });
+
+        await batch.commit();
+        done += chunk.length;
+        const pct = Math.round((done / total) * 100);
+        modal.querySelector("#progress-fill").style.width = pct + "%";
+        modal.querySelector("#progress-text").textContent = `${done} / ${total}`;
+      }
+
+      setTimeout(() => {
+        modal.remove();
+        UI.success(`${done} kayıt aktarıldı ✓`);
+      }, 400);
+    } catch (e) {
+      console.error("Import hatası:", e);
+      modal.remove();
+      UI.error(`İçe aktarım hatası: ${e.message}`);
+    }
+  }
+};
+// =====================================================================
+// Gider kategorileri
+// =====================================================================
+const EXPENSE_CATS = [
+  { id: "market",       label: "Market Alışveriş",  icon: "🛒" },
+  { id: "sutcu",        label: "Sütçü",             icon: "🥛" },
+  { id: "algida",       label: "Algida",            icon: "🍦" },
+  { id: "su",           label: "Su",                icon: "💧" },
+  { id: "kulahci",      label: "Külahçı",           icon: "🌽" },
+  { id: "topluTuketim", label: "Toplu Tüketim",     icon: "📦" },
+  { id: "yemek",        label: "Yemek",             icon: "🍽️" },
+  { id: "genelIhtiyac", label: "Genel İhtiyaç",     icon: "🧰" },
+  { id: "orcun",        label: "Orçun (kişisel)",   icon: "👤" },
+  { id: "elektrikSu",   label: "Elektrik-Su",       icon: "💡" },
+  { id: "diger",        label: "Diğer",             icon: "📌" }
+];
+
+// =====================================================================
+// Excel gömülü gider verileri
+// Sıralama: [date, market, sutcu, algida, su, kulahci, topluTuketim, yemek, genelIhtiyac, orcun, elektrikSu, diger]
+// =====================================================================
+const EXCEL_EXPENSE_DATA = [["2026-03-04",0,0,0,0,0,0,0,0,0,0,2050.0],["2026-03-05",0,0,0,0,0,5835.0,0,0,0,0,0],["2026-03-06",328.0,0,0,0,0,0,0,0,0,0,0],["2026-03-08",2421.96,0,0,0,0,0,0,0,0,0,0],["2026-03-09",252.58,0,0,0,0,0,0,0,0,0,0],["2026-03-10",404.0,0,0,0,0,0,0,0,0,0,0],["2026-03-11",471.25,0,0,0,0,0,0,0,0,0,0],["2026-03-12",716.0,0,0,0,0,0,0,0,0,0,0],["2026-03-13",519.75,0,0,0,0,0,0,0,0,0,0],["2026-03-14",433.25,0,0,0,0,0,0,0,0,0,3500.0],["2026-03-15",730.75,0,0,0,0,0,0,0,0,0,0],["2026-03-16",621.2,0,0,0,0,0,0,0,0,0,0],["2026-03-17",1185.25,0,0,0,0,0,0,0,0,0,0],["2026-03-18",1189.19,0,0,0,0,0,0,0,0,0,0],["2026-03-19",298.0,0,0,0,0,0,0,0,0,0,0],["2026-03-20",554.0,0,0,0,0,0,0,0,0,0,0],["2026-03-21",792.0,0,0,0,0,0,0,0,0,0,0],["2026-03-22",554.0,0,0,0,0,0,0,0,0,0,0],["2026-03-27",766.89,0,0,0,0,5040.75,0,0,0,0,0],["2026-03-29",833.97,0,0,0,0,0,0,0,0,0,0],["2026-03-30",430.0,0,0,0,0,0,0,0,0,0,0],["2026-03-31",645.0,0,0,0,0,0,0,0,0,0,0],["2026-04-02",1014.46,0,0,0,0,0,0,0,0,0,0],["2026-04-04",350.0,0,0,0,0,0,0,0,0,0,0],["2026-04-05",530.0,0,0,0,0,0,0,0,0,0,0],["2026-04-06",1148.55,0,0,0,0,0,0,0,0,0,0],["2026-04-07",1093.94,0,0,0,0,0,0,0,0,0,0],["2026-04-08",828.0,0,0,0,0,0,0,0,0,0,0],["2026-04-09",988.65,0,0,0,0,0,0,0,0,0,0],["2026-04-10",2257.0,0,0,0,0,0,0,0,0,0,17625.0],["2026-04-11",1280.45,0,0,0,0,0,0,0,0,0,0],["2026-04-12",1077.31,0,0,0,0,0,0,0,0,0,0],["2026-04-13",1014.0,0,0,0,0,0,0,0,0,0,0],["2026-04-14",1257.13,0,0,0,0,0,0,0,0,0,0],["2026-04-15",1305.78,0,0,0,0,0,0,0,0,0,0],["2026-04-16",1080.5,0,0,0,0,0,0,0,0,0,0],["2026-04-17",788.5,0,0,0,0,0,0,0,0,0,0],["2026-04-18",1208.5,0,0,0,0,0,0,0,0,0,0],["2026-04-19",1142.83,0,0,0,0,0,0,0,0,0,0],["2026-04-20",2174.0,0,0,0,0,0,0,0,0,0,0],["2026-04-21",1066.5,0,0,0,0,0,0,0,0,0,0],["2026-04-22",1051.0,0,0,0,0,0,0,0,0,0,0],["2026-04-23",1097.31,0,0,0,0,0,0,0,0,0,0],["2026-04-24",2244.0,0,0,725.0,0,0,0,0,0,0,0],["2026-04-25",1493.5,0,0,0,0,0,0,0,0,0,0],["2026-04-26",1340.36,0,12420.38,0,0,0,0,0,0,0,0],["2026-04-27",750.0,0,0,0,0,0,0,0,0,0,0],["2026-04-28",1244.74,0,0,0,0,0,0,0,0,0,0],["2026-04-29",1100.0,0,0,700.0,0,0,0,0,0,0,0],["2026-04-30",1378.0,0,0,0,0,0,0,0,0,0,0],["2026-05-01",1063.0,0,0,0,0,0,0,0,0,0,0],["2026-05-02",893.5,0,0,0,0,0,0,0,0,0,0],["2026-05-03",1066.0,0,0,0,0,0,0,0,0,0,0],["2026-05-04",1058.0,0,0,0,0,4670.0,0,7530.0,0,0,0],["2026-05-05",1110.0,0,0,0,0,0,0,0,0,0,0],["2026-05-06",1330.0,0,0,0,0,0,0,0,0,0,0],["2026-05-07",1015.0,0,8635.0,0,0,3674.2,0,0,0,0,0],["2026-05-08",1090.0,0,11365.0,0,0,0,0,0,0,0,0],["2026-05-09",1062.93,0,0,0,0,0,0,0,0,0,0],["2026-05-10",892.0,0,0,0,0,0,0,0,0,0,0],["2026-05-11",5903.0,0,0,1900.0,0,0,0,0,0,0,0],["2026-05-12",2904.0,0,0,0,0,0,0,0,0,0,0],["2026-05-13",818.88,0,2438.96,0,0,0,0,0,0,0,0],["2026-05-14",1546.0,0,0,0,0,9384.04,0,0,0,0,0]];
+
+const Expense = {
+  formEl: null,
+  listEl: null,
+  state: {
+    date: null,
+    entries: [],
+    form: null,         // { date, market: "", sutcu: "", ..., note: "" }
+    dirty: false,
+    saving: false,
+    unsub: null,
+    everRendered: false
+  },
+
+  start() {
+    this.formEl = document.getElementById("expense-content");
+    this.listEl = document.getElementById("expense-list-wrapper");
+    if (!this.state.everRendered) {
+      this.state.date = fmt.todayKey();
+      this.state.form = this.emptyForm(this.state.date);
+    }
+    this.renderShell();
+    this.state.everRendered = true;
+    this.attachListener();
+  },
+
+  stop() {
+    if (this.state.unsub) {
+      this.state.unsub();
+      this.state.unsub = null;
+    }
+  },
+
+  emptyForm(date) {
+    const f = { date, note: "" };
+    EXPENSE_CATS.forEach(c => { f[c.id] = ""; });
+    return f;
+  },
+
+  entryToForm(entry, date) {
+    const f = { date, note: entry.note || "" };
+    EXPENSE_CATS.forEach(c => {
+      f[c.id] = entry.cats && entry.cats[c.id] ? String(entry.cats[c.id]) : "";
+    });
+    return f;
+  },
+
+  attachListener() {
+    if (this.state.unsub) this.state.unsub();
+    const ref = collection(db, "broop_app", State.cloudId, "expense");
+    this.state.unsub = onSnapshot(ref, (snap) => {
+      const entries = [];
+      snap.forEach(d => {
+        const raw = d.data();
+        const decrypted = Crypto.decrypt(raw.data, State.key);
+        if (decrypted) entries.push({ id: d.id, ...decrypted });
+      });
+      entries.sort((a, b) => b.date.localeCompare(a.date));
+      this.state.entries = entries;
+
+      const current = entries.find(e => e.date === this.state.date);
+      if (!this.state.dirty) {
+        this.state.form = current
+          ? this.entryToForm(current, this.state.date)
+          : this.emptyForm(this.state.date);
+        this.renderFormFields();
+      }
+      this.recalcTotal();
+      this.updateMeta();
+      this.renderList();
+    }, (err) => {
+      console.error("Expense listener hatası:", err);
+      UI.error("Veri senkronizasyon hatası");
+    });
+  },
+
+  getCurrentEntry() {
+    return this.state.entries.find(e => e.date === this.state.date);
+  },
+
+  renderShell() {
+    const catRows = EXPENSE_CATS.map(c => `
+      <div class="cat-row" data-cat="${c.id}">
+        <span class="cat-icon">${c.icon}</span>
+        <span class="cat-label">${c.label}</span>
+        <div class="cat-input">
+          <span class="prefix">₺</span>
+          <input type="text" inputmode="decimal" id="inp-cat-${c.id}" placeholder="0" autocomplete="off" />
+        </div>
+      </div>
+    `).join("");
+
+    this.formEl.innerHTML = `
+      <div class="module-header">
+        <h2 style="color: var(--accent-expense);">💸 Gider</h2>
+        <div class="sub">Günlük harcamalar</div>
+      </div>
+      <div class="expense-card">
+        <div class="expense-card-header">
+          <div class="title" id="exp-card-title">Gün ekle</div>
+          <div class="meta" id="exp-card-meta"></div>
+        </div>
+
+        <div class="form-field">
+          <label>Tarih</label>
+          <input type="date" id="inp-exp-date" value="${this.state.form.date}" />
+        </div>
+
+        <div class="cat-list">
+          ${catRows}
+        </div>
+
+        <div class="form-field">
+          <label>Not <span class="lbl-tag">opsiyonel</span></label>
+          <textarea id="inp-exp-note" placeholder="örn. Yunpa siparişi, parça parça..." rows="2"></textarea>
+        </div>
+
+        <div class="expense-total-bar">
+          <span class="total-label">Toplam Gider</span>
+          <span class="total-value" id="exp-total-display">₺0</span>
+        </div>
+
+        <button id="btn-save-expense" class="btn-save-expense">Kaydet</button>
+      </div>
+    `;
+
+    document.getElementById("inp-exp-date").addEventListener("change", (e) => {
+      this.changeDate(e.target.value);
+    });
+
+    EXPENSE_CATS.forEach(c => {
+      const el = document.getElementById("inp-cat-" + c.id);
+      el.addEventListener("input", () => this.onFieldChange(c.id, el.value));
+    });
+
+    document.getElementById("inp-exp-note").addEventListener("input", (e) => {
+      this.onFieldChange("note", e.target.value);
+    });
+
+    document.getElementById("btn-save-expense").addEventListener("click", () => this.save());
+
+    this.renderFormFields();
+    this.recalcTotal();
+    this.updateMeta();
+  },
+
+  renderFormFields() {
+    const f = this.state.form;
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && el.value !== String(val)) el.value = val;
+    };
+    setVal("inp-exp-date", f.date);
+    setVal("inp-exp-note", f.note);
+    EXPENSE_CATS.forEach(c => {
+      setVal("inp-cat-" + c.id, f[c.id]);
+      // satıra has-value class'ı ekle
+      const row = document.querySelector(`.cat-row[data-cat="${c.id}"]`);
+      if (row) {
+        row.classList.toggle("has-value", fmt.parseNum(f[c.id]) > 0);
+      }
+    });
+  },
+
+  onFieldChange(key, value) {
+    this.state.form[key] = value;
+    this.state.dirty = true;
+    // has-value class'ını güncel tut
+    const row = document.querySelector(`.cat-row[data-cat="${key}"]`);
+    if (row) row.classList.toggle("has-value", fmt.parseNum(value) > 0);
+    this.recalcTotal();
+    this.updateSaveButton();
+  },
+
+  changeDate(newDate) {
+    if (!newDate) return;
+    if (this.state.dirty) {
+      if (!confirm("Kaydedilmemiş değişiklikler var. Tarih değişsin ve kaybolsunlar mı?")) {
+        document.getElementById("inp-exp-date").value = this.state.date;
+        return;
+      }
+    }
+    this.state.date = newDate;
+    this.state.dirty = false;
+    const current = this.state.entries.find(e => e.date === newDate);
+    this.state.form = current ? this.entryToForm(current, newDate) : this.emptyForm(newDate);
+    this.renderFormFields();
+    this.recalcTotal();
+    this.updateMeta();
+    this.renderList();
+  },
+
+  recalcTotal() {
+    const f = this.state.form;
+    let total = 0;
+    EXPENSE_CATS.forEach(c => { total += fmt.parseNum(f[c.id]); });
+    const el = document.getElementById("exp-total-display");
+    if (el) el.textContent = fmt.money(total);
+  },
+
+  updateMeta() {
+    const titleEl = document.getElementById("exp-card-title");
+    const metaEl = document.getElementById("exp-card-meta");
+    if (!titleEl) return;
+
+    const display = fmt.dateKeyToDisplay(this.state.date);
+    const current = this.getCurrentEntry();
+    if (current) {
+      titleEl.textContent = display + " · düzenle";
+      const by = current.lastEditedBy || current.createdBy || "?";
+      const imp = current.importedFromExcel ? " (excel)" : "";
+      metaEl.textContent = `son: ${by}${imp}`;
+    } else {
+      titleEl.textContent = display + " · yeni kayıt";
+      metaEl.textContent = "";
+    }
+    this.updateSaveButton();
+  },
+
+  updateSaveButton() {
+    const btn = document.getElementById("btn-save-expense");
+    if (!btn) return;
+    if (this.state.saving) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Kaydediliyor...';
+      return;
+    }
+    btn.disabled = false;
+    const current = this.getCurrentEntry();
+    if (current && !this.state.dirty) {
+      btn.textContent = "✓ Kaydedildi";
+      btn.style.background = "var(--bg-elev)";
+      btn.style.color = "var(--text-secondary)";
+    } else if (current && this.state.dirty) {
+      btn.textContent = "Güncelle";
+      btn.style.background = "var(--accent-expense)";
+      btn.style.color = "#fff";
+    } else {
+      btn.textContent = "Kaydet";
+      btn.style.background = "var(--accent-expense)";
+      btn.style.color = "#fff";
+    }
+  },
+
+  async save() {
+    if (this.state.saving) return;
+    const f = this.state.form;
+
+    const cats = {};
+    let total = 0;
+    EXPENSE_CATS.forEach(c => {
+      const v = fmt.parseNum(f[c.id]);
+      cats[c.id] = v;
+      total += v;
+    });
+
+    if (total === 0 && !f.note.trim()) {
+      UI.error("Boş kayıt kaydedilemez");
+      return;
+    }
+
+    this.state.saving = true;
+    this.updateSaveButton();
+
+    try {
+      const now = Date.now();
+      const current = this.getCurrentEntry();
+      const isNew = !current;
+
+      const data = {
+        date: f.date,
+        cats,
+        total,
+        note: f.note.trim(),
+        createdBy: isNew ? State.player.name : (current.createdBy || State.player.name),
+        createdAt: isNew ? now : (current.createdAt || now),
+        lastEditedBy: State.player.name,
+        updatedAt: now
+      };
+
+      const ref = doc(db, "broop_app", State.cloudId, "expense", f.date);
+      await setDoc(ref, {
+        data: Crypto.encrypt(data, State.key),
+        date: f.date,
+        updatedAt: now
+      });
+
+      this.state.dirty = false;
+      UI.success(isNew ? "Eklendi ✓" : "Güncellendi ✓");
+    } catch (e) {
+      console.error("Expense kaydetme hatası:", e);
+      UI.error("Kaydedilemedi: " + e.message);
+    } finally {
+      this.state.saving = false;
+      this.updateSaveButton();
+    }
+  },
+
+  // =================== LİSTE ===================
+  renderList() {
+    if (!this.listEl) return;
+    const entries = this.state.entries;
+
+    if (entries.length === 0) {
+      this.listEl.innerHTML = `
+        <div class="empty-list">
+          <p>Henüz geçmiş kayıt yok.</p>
+          <button id="btn-show-exp-import" class="btn-secondary" style="margin-top:8px; max-width: 280px;">
+            📥 Eski Excel giderlerini içe aktar
+          </button>
+        </div>
+      `;
+      const btn = document.getElementById("btn-show-exp-import");
+      if (btn) btn.addEventListener("click", () => this.showImport());
+      return;
+    }
+
+    const visibleCount = Math.min(30, entries.length);
+    let html = `
+      <div class="list-header">
+        <span>Geçmiş günler (${entries.length})</span>
+        <button id="btn-show-exp-import" class="btn-mini">📥 Excel'den içe aktar</button>
+      </div>
+      <div class="entry-list">
+    `;
+    entries.slice(0, visibleCount).forEach(e => {
+      const isCurrent = e.date === this.state.date;
+      // En büyük 2 kategoriyi göster
+      const cats = e.cats || {};
+      const filled = EXPENSE_CATS
+        .map(c => ({ id: c.id, label: c.label, icon: c.icon, val: cats[c.id] || 0 }))
+        .filter(x => x.val > 0)
+        .sort((a, b) => b.val - a.val);
+
+      const tags = filled.slice(0, 2).map(x => `<span>${x.icon} ${fmt.money(x.val)}</span>`).join("");
+      const more = filled.length > 2 ? `<span>+${filled.length - 2}</span>` : "";
+
+      html += `
+        <div class="entry-item expense ${isCurrent ? 'current' : ''}" data-date="${e.date}">
+          <div class="entry-main">
+            <div class="entry-date">${fmt.dateKeyToDisplay(e.date)}</div>
+            <div class="entry-meta">${tags}${more}</div>
+          </div>
+          <div class="entry-side">
+            <div class="entry-total">${fmt.money(e.total)}</div>
+            <button class="btn-delete" data-date="${e.date}" title="Sil">×</button>
+          </div>
+        </div>
+      `;
+    });
+    html += "</div>";
+
+    if (entries.length > visibleCount) {
+      html += `<div class="list-more">+ ${entries.length - visibleCount} eski kayıt daha</div>`;
+    }
+
+    this.listEl.innerHTML = html;
+
+    this.listEl.querySelectorAll(".entry-item").forEach(item => {
+      item.addEventListener("click", (ev) => {
+        if (ev.target.classList.contains("btn-delete")) return;
+        const date = item.dataset.date;
+        this.changeDate(date);
+        const inp = document.getElementById("inp-exp-date");
+        if (inp) inp.value = date;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    });
+
+    this.listEl.querySelectorAll(".btn-delete").forEach(btn => {
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        this.confirmDelete(btn.dataset.date);
+      });
+    });
+
+    const impBtn = document.getElementById("btn-show-exp-import");
+    if (impBtn) impBtn.addEventListener("click", () => this.showImport());
+  },
+
+  async confirmDelete(date) {
+    const entry = this.state.entries.find(e => e.date === date);
+    if (!entry) return;
+
+    const msg1 = `${fmt.dateKeyToDisplay(date)} gider kaydını silmek istediğine emin misin?\nToplam: ${fmt.money(entry.total)}`;
+    if (!confirm(msg1)) return;
+    if (!confirm("Bu işlem GERİ ALINAMAZ. Gerçekten sil?")) return;
+
+    try {
+      const ref = doc(db, "broop_app", State.cloudId, "expense", date);
+      await deleteDoc(ref);
+      UI.success("Silindi");
+    } catch (e) {
+      console.error(e);
+      UI.error("Silinemedi: " + e.message);
+    }
+  },
+
+  // =================== IMPORT ===================
+  showImport() {
+    const data = EXCEL_EXPENSE_DATA;
+    const existing = new Set(this.state.entries.map(e => e.date));
+    const newOnes = data.filter(row => !existing.has(row[0]));
+    const conflicts = data.filter(row => existing.has(row[0]));
+
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop";
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>Excel'den Gider İçe Aktar</h3>
+        <p class="modal-info">
+          Excel dosyandan <strong>${data.length}</strong> gider kaydı buldum
+          (${data[0][0]} → ${data[data.length-1][0]} arası).
+        </p>
+        ${conflicts.length > 0 ? `
+          <div class="modal-warn">
+            ⚠️ ${conflicts.length} tarihte zaten kayıt var.
+            <label style="display:block; margin-top:8px; color: var(--text-primary);">
+              <input type="checkbox" id="exp-import-overwrite" style="margin-right:6px;" />
+              Üzerine yaz
+            </label>
+          </div>
+        ` : ""}
+        <p>Yüklenecek: <strong id="exp-import-count">${newOnes.length}</strong> kayıt</p>
+        <div id="exp-import-progress" style="display:none;">
+          <div class="progress-bar"><div class="progress-fill" id="exp-progress-fill"></div></div>
+          <div id="exp-progress-text">0 / 0</div>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-exp-import-cancel" class="btn-secondary">İptal</button>
+          <button id="btn-exp-import-confirm" class="btn-primary">İçe Aktar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const ow = document.getElementById("exp-import-overwrite");
+    if (ow) {
+      ow.addEventListener("change", () => {
+        const count = ow.checked ? data.length : newOnes.length;
+        document.getElementById("exp-import-count").textContent = count;
+      });
+    }
+
+    document.getElementById("btn-exp-import-cancel").addEventListener("click", () => {
+      modal.remove();
+    });
+
+    document.getElementById("btn-exp-import-confirm").addEventListener("click", async () => {
+      const overwrite = ow && ow.checked;
+      const toImport = overwrite ? data : newOnes;
+      if (toImport.length === 0) {
+        UI.error("Yüklenecek kayıt yok");
+        return;
+      }
+      await this.runImport(toImport, modal);
+    });
+  },
+
+  async runImport(rows, modal) {
+    modal.querySelector("#exp-import-progress").style.display = "";
+    modal.querySelector("#btn-exp-import-confirm").disabled = true;
+    modal.querySelector("#btn-exp-import-cancel").disabled = true;
+
+    const total = rows.length;
+    let done = 0;
+    const now = Date.now();
+    const player = State.player.name;
+
+    try {
+      const chunkSize = 50;
+      for (let i = 0; i < rows.length; i += chunkSize) {
+        const chunk = rows.slice(i, i + chunkSize);
+        const batch = writeBatch(db);
+
+        chunk.forEach(row => {
+          const date = row[0];
+          const cats = {};
+          let sum = 0;
+          EXPENSE_CATS.forEach((c, idx) => {
+            const v = +row[idx + 1] || 0;
+            cats[c.id] = v;
+            sum += v;
+          });
+
+          const data = {
+            date,
+            cats,
+            total: sum,
+            note: "",
+            createdBy: player,
+            createdAt: now,
+            lastEditedBy: player,
+            updatedAt: now,
+            importedFromExcel: true
+          };
+          const ref = doc(db, "broop_app", State.cloudId, "expense", date);
+          batch.set(ref, {
+            data: Crypto.encrypt(data, State.key),
+            date,
+            updatedAt: now
+          });
+        });
+
+        await batch.commit();
+        done += chunk.length;
+        const pct = Math.round((done / total) * 100);
+        modal.querySelector("#exp-progress-fill").style.width = pct + "%";
+        modal.querySelector("#exp-progress-text").textContent = `${done} / ${total}`;
+      }
+
+      setTimeout(() => {
+        modal.remove();
+        UI.success(`${done} gider kaydı aktarıldı ✓`);
+      }, 400);
+    } catch (e) {
+      console.error("Expense import hatası:", e);
+      modal.remove();
+      UI.error(`İçe aktarım hatası: ${e.message}`);
+    }
+  }
+};
+// =====================================================================
+// Excel gömülü toptancı işlemleri
+// Sıralama: [date, supplierName, type, amount]
+// =====================================================================
+const EXCEL_SUPPLIER_DATA = [["2026-04-10","ÜÇLER AMBALAJ","purchase",17625.0],["2026-04-10","ÜÇLER AMBALAJ","payment",17625.0],["2026-03-28","Yunpa Gıda","purchase",13635.0],["2026-04-09","Yunpa Gıda","purchase",133118.0],["2026-04-24","TURKCONE külahçı","purchase",10700.0],["2026-04-24","TURKCONE külahçı","payment",10700.0],["2026-04-28","Yunpa Gıda","payment",13635.0],["2026-04-28","Yunpa Gıda","payment",131118.0],["2026-05-04","Yunpa Gıda","payment",2000.0],["2026-05-16","Murat Helvacı","purchase",29037.5],["2026-05-16","Murat Helvacı","payment",29037.5]];
+
+function randomId(prefix) {
+  return prefix + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+}
+
+const Supplier = {
+  el: null,
+  state: {
+    view: "list",          // 'list' | 'detail'
+    activeTab: "suppliers", // 'suppliers' | 'milk'
+    selectedSupplierId: null,
+    suppliers: [],
+    transactions: [],
+    unsubSuppliers: null,
+    unsubTx: null,
+    everRendered: false
+  },
+  activeSub: null,           // 'milk' tab açıkken Milk modülü
+
+  start() {
+    this.el = document.getElementById("supplier-content");
+    this.renderShell();
+    this.state.everRendered = true;
+    this.attachListeners();
+  },
+
+  stop() {
+    if (this.state.unsubSuppliers) { this.state.unsubSuppliers(); this.state.unsubSuppliers = null; }
+    if (this.state.unsubTx) { this.state.unsubTx(); this.state.unsubTx = null; }
+    if (this.activeSub && this.activeSub.stop) this.activeSub.stop();
+    this.activeSub = null;
+  },
+
+  attachListeners() {
+    if (this.state.unsubSuppliers) this.state.unsubSuppliers();
+    if (this.state.unsubTx) this.state.unsubTx();
+
+    const supRef = collection(db, "broop_app", State.cloudId, "suppliers");
+    this.state.unsubSuppliers = onSnapshot(supRef, (snap) => {
+      const list = [];
+      snap.forEach(d => {
+        const raw = d.data();
+        const dec = Crypto.decrypt(raw.data, State.key);
+        if (dec) list.push({ id: d.id, ...dec });
+      });
+      list.sort((a, b) => a.name.localeCompare(b.name, "tr"));
+      this.state.suppliers = list;
+      this.render();
+    }, (err) => console.error("Supplier listener:", err));
+
+    const txRef = collection(db, "broop_app", State.cloudId, "supplierTx");
+    this.state.unsubTx = onSnapshot(txRef, (snap) => {
+      const list = [];
+      snap.forEach(d => {
+        const raw = d.data();
+        const dec = Crypto.decrypt(raw.data, State.key);
+        if (dec) list.push({ id: d.id, ...dec });
+      });
+      list.sort((a, b) => b.date.localeCompare(a.date));
+      this.state.transactions = list;
+      this.render();
+    }, (err) => console.error("SupplierTx listener:", err));
+  },
+
+  // Bir toptancının bakiyesi (pozitif = borç, negatif = alacak)
+  getBalance(supplierId) {
+    return this.state.transactions
+      .filter(t => t.supplierId === supplierId)
+      .reduce((bal, t) => bal + (t.type === "purchase" ? t.amount : -t.amount), 0);
+  },
+
+  getTotalDebt() {
+    let total = 0;
+    this.state.suppliers.forEach(s => {
+      const b = this.getBalance(s.id);
+      if (b > 0) total += b;
+    });
+    return total;
+  },
+
+  renderShell() {
+    this.el.innerHTML = `
+      <div class="module-header">
+        <h2 style="color: var(--accent-supplier);">📦 Toptancı</h2>
+        <div class="sub">Tedarikçi, borç ve süt alımı</div>
+      </div>
+      <div class="sub-tabs">
+        <button class="sub-tab ${this.state.activeTab === 'suppliers' ? 'active' : ''}" data-tab="suppliers">📦 Toptancılar</button>
+        <button class="sub-tab ${this.state.activeTab === 'milk' ? 'active' : ''}" data-tab="milk">🥛 Sütçü</button>
+      </div>
+      <div id="supplier-body"></div>
+    `;
+    this.el.querySelectorAll(".sub-tab").forEach(btn => {
+      btn.addEventListener("click", () => this.switchSubTab(btn.dataset.tab));
+    });
+    this.render();
+  },
+
+  switchSubTab(tab) {
+    if (this.state.activeTab === tab) return;
+    // Eğer milk tab'inden çıkıyorsak, Milk modülünü durdur
+    if (this.state.activeTab === "milk" && this.activeSub) {
+      if (this.activeSub.stop) this.activeSub.stop();
+      this.activeSub = null;
+    }
+    this.state.activeTab = tab;
+    // Tab değişiminde detay görünümünden listeye dön
+    this.state.view = "list";
+    this.state.selectedSupplierId = null;
+    // Aktif tab butonunu güncelle
+    this.el.querySelectorAll(".sub-tab").forEach(b => {
+      b.classList.toggle("active", b.dataset.tab === tab);
+    });
+    this.render();
+  },
+
+  render() {
+    const body = document.getElementById("supplier-body");
+    if (!body) return;
+
+    if (this.state.activeTab === "milk") {
+      // Milk modülünü içeri yerleştir
+      body.innerHTML = `<div id="milk-content"></div>`;
+      Milk.start();
+      this.activeSub = Milk;
+      return;
+    }
+
+    // Toptancılar tab
+    if (this.activeSub) {
+      if (this.activeSub.stop) this.activeSub.stop();
+      this.activeSub = null;
+    }
+
+    if (this.state.view === "detail") {
+      this.renderDetail(body);
+    } else {
+      this.renderList(body);
+    }
+  },
+
+  renderList(body) {
+    const suppliers = this.state.suppliers;
+    const totalDebt = this.getTotalDebt();
+
+    let html = "";
+
+    // Toplam borç özeti
+    if (suppliers.length > 0) {
+      html += `
+        <div class="debt-summary ${totalDebt < 0.01 ? 'zero' : ''}">
+          <div class="label">Toplam Borç</div>
+          <div class="amount">${fmt.money(totalDebt)}</div>
+          <div class="hint">${totalDebt < 0.01 ? "✓ tüm hesaplar kapalı" : `${suppliers.filter(s => this.getBalance(s.id) > 0.01).length} toptancıya borç var`}</div>
+        </div>
+      `;
+    }
+
+    // Aksiyonlar
+    if (suppliers.length > 0) {
+      html += `
+        <div class="supplier-actions">
+          <button id="btn-new-supplier">+ Yeni Toptancı</button>
+          <button id="btn-new-tx" class="primary">+ Yeni İşlem</button>
+        </div>
+      `;
+    }
+
+    // Toptancı listesi
+    if (suppliers.length === 0) {
+      html += `
+        <div class="empty-list">
+          <p>Henüz toptancı yok.</p>
+          <button id="btn-new-supplier-empty" class="btn-secondary" style="max-width: 240px; margin: 8px auto;">+ Yeni Toptancı</button>
+          <button id="btn-show-sup-import" class="btn-secondary" style="max-width: 280px; margin: 6px auto;">📥 Eski Excel'den içe aktar</button>
+        </div>
+      `;
+    } else {
+      html += `<div class="list-header"><span>Toptancılar (${suppliers.length})</span></div>`;
+      html += `<div class="supplier-list">`;
+      suppliers.forEach(s => {
+        const bal = this.getBalance(s.id);
+        const txCount = this.state.transactions.filter(t => t.supplierId === s.id).length;
+        let cls = "zero";
+        let balText = "✓ kapalı";
+        if (bal > 0.01) {
+          cls = "debt";
+          balText = fmt.money(bal) + " borç";
+        } else if (bal < -0.01) {
+          cls = "credit";
+          balText = fmt.money(Math.abs(bal)) + " alacak";
+        }
+        html += `
+          <div class="supplier-item ${cls}" data-id="${s.id}">
+            <div class="sup-info">
+              <div class="sup-name">${escapeHtml(s.name)}</div>
+              <div class="sup-meta">${txCount} işlem</div>
+            </div>
+            <div class="sup-balance">${balText}</div>
+          </div>
+        `;
+      });
+      html += "</div>";
+    }
+
+    body.innerHTML = html;
+
+    // Listeners
+    body.querySelectorAll(".supplier-item").forEach(item => {
+      item.addEventListener("click", () => {
+        this.state.selectedSupplierId = item.dataset.id;
+        this.state.view = "detail";
+        this.render();
+      });
+    });
+
+    const newSupBtn = document.getElementById("btn-new-supplier");
+    if (newSupBtn) newSupBtn.addEventListener("click", () => this.showAddSupplier());
+    const newSupBtn2 = document.getElementById("btn-new-supplier-empty");
+    if (newSupBtn2) newSupBtn2.addEventListener("click", () => this.showAddSupplier());
+
+    const newTxBtn = document.getElementById("btn-new-tx");
+    if (newTxBtn) newTxBtn.addEventListener("click", () => this.showAddTx());
+
+    const impBtn = document.getElementById("btn-show-sup-import");
+    if (impBtn) impBtn.addEventListener("click", () => this.showImport());
+  },
+
+  renderDetail(body) {
+    const supplier = this.state.suppliers.find(s => s.id === this.state.selectedSupplierId);
+    if (!supplier) {
+      // Toptancı silinmiş veya bulunamamış, listeye dön
+      this.state.view = "list";
+      this.state.selectedSupplierId = null;
+      this.render();
+      return;
+    }
+
+    const bal = this.getBalance(supplier.id);
+    const txs = this.state.transactions.filter(t => t.supplierId === supplier.id);
+
+    let balCls = "zero";
+    let balText = "Bakiye: ₺0 · ✓ kapalı";
+    if (bal > 0.01) {
+      balCls = "debt";
+      balText = `Bakiye: ${fmt.money(bal)} borç`;
+    } else if (bal < -0.01) {
+      balCls = "zero";
+      balText = `Bakiye: ${fmt.money(Math.abs(bal))} alacak`;
+    }
+
+    let html = `
+      <div class="detail-header">
+        <button class="btn-back" id="btn-back-suppliers" title="Geri">‹</button>
+        <div class="info">
+          <div class="name">${escapeHtml(supplier.name)}</div>
+          <div class="balance-tag ${balCls}">${balText}</div>
+        </div>
+        <button class="btn-mini" id="btn-delete-supplier" style="color: var(--danger);">Sil</button>
+      </div>
+
+      <div class="supplier-actions" style="grid-template-columns: 1fr;">
+        <button id="btn-add-tx-here" class="primary">+ İşlem Ekle</button>
+      </div>
+    `;
+
+    if (txs.length === 0) {
+      html += `
+        <div class="empty-list">
+          <p>Henüz işlem yok.</p>
+        </div>
+      `;
+    } else {
+      html += `<div class="list-header"><span>İşlemler (${txs.length})</span></div>`;
+      html += `<div class="tx-list">`;
+      txs.forEach(t => {
+        const icon = t.type === "purchase" ? "📥" : "💰";
+        const typeLabel = t.type === "purchase" ? "mal alımı" : "ödeme";
+        html += `
+          <div class="tx-item ${t.type}">
+            <span class="tx-icon">${icon}</span>
+            <div class="tx-main">
+              <div class="tx-date">${fmt.dateKeyToDisplay(t.date)} · ${typeLabel}</div>
+              ${t.note ? `<div class="tx-note">${escapeHtml(t.note)}</div>` : ""}
+            </div>
+            <div class="tx-amount">${fmt.money(t.amount)}</div>
+            <button class="btn-delete" data-tx="${t.id}" title="Sil">×</button>
+          </div>
+        `;
+      });
+      html += "</div>";
+    }
+
+    body.innerHTML = html;
+
+    document.getElementById("btn-back-suppliers").addEventListener("click", () => {
+      this.state.view = "list";
+      this.state.selectedSupplierId = null;
+      this.render();
+    });
+
+    document.getElementById("btn-add-tx-here").addEventListener("click", () => {
+      this.showAddTx(supplier.id);
+    });
+
+    document.getElementById("btn-delete-supplier").addEventListener("click", () => {
+      this.confirmDeleteSupplier(supplier);
+    });
+
+    body.querySelectorAll(".btn-delete[data-tx]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        this.confirmDeleteTx(btn.dataset.tx);
+      });
+    });
+  },
+
+  // =================== MODALS ===================
+  showAddSupplier() {
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop";
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>Yeni Toptancı</h3>
+        <div class="form-field">
+          <label>İsim</label>
+          <input type="text" id="inp-new-sup-name" class="field-input" placeholder="örn. Yunpa Gıda" />
+        </div>
+        <div id="new-sup-error" class="error-msg" style="display:none;"></div>
+        <div class="modal-actions">
+          <button id="btn-add-sup-cancel" class="btn-secondary">İptal</button>
+          <button id="btn-add-sup-save" class="btn-primary">Ekle</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const nameInput = document.getElementById("inp-new-sup-name");
+    nameInput.focus();
+
+    document.getElementById("btn-add-sup-cancel").addEventListener("click", () => modal.remove());
+
+    const submit = async () => {
+      const name = nameInput.value.trim();
+      if (!name) {
+        UI.showError("new-sup-error", "İsim gerekli");
+        return;
+      }
+      if (this.state.suppliers.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+        UI.showError("new-sup-error", "Bu isimde toptancı zaten var");
+        return;
+      }
+      try {
+        await this.createSupplier(name);
+        modal.remove();
+        UI.success("Eklendi ✓");
+      } catch (e) {
+        UI.showError("new-sup-error", "Hata: " + e.message);
+      }
+    };
+
+    document.getElementById("btn-add-sup-save").addEventListener("click", submit);
+    nameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
+  },
+
+  async createSupplier(name) {
+    const id = randomId("sup");
+    const data = {
+      name,
+      createdBy: State.player.name,
+      createdAt: Date.now()
+    };
+    const ref = doc(db, "broop_app", State.cloudId, "suppliers", id);
+    await setDoc(ref, {
+      data: Crypto.encrypt(data, State.key),
+      updatedAt: Date.now()
+    });
+    return id;
+  },
+
+  showAddTx(presetSupplierId = null) {
+    if (this.state.suppliers.length === 0) {
+      UI.error("Önce bir toptancı ekle");
+      return;
+    }
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop";
+
+    const supOptions = this.state.suppliers
+      .map(s => `<option value="${s.id}" ${s.id === presetSupplierId ? "selected" : ""}>${escapeHtml(s.name)}</option>`)
+      .join("");
+
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>Yeni İşlem</h3>
+
+        <div class="form-field">
+          <label>Toptancı</label>
+          <select id="inp-tx-supplier">
+            ${supOptions}
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label>İşlem Tipi</label>
+          <div class="tx-toggle">
+            <button id="btn-tx-purchase" class="purchase active" data-type="purchase">📥 Mal Alımı</button>
+            <button id="btn-tx-payment" class="payment" data-type="payment">💰 Ödeme</button>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Tutar</label>
+          <div class="input-money">
+            <span class="prefix">₺</span>
+            <input type="text" inputmode="decimal" id="inp-tx-amount" placeholder="0" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Tarih</label>
+          <input type="date" id="inp-tx-date" class="field-input" value="${fmt.todayKey()}" />
+        </div>
+
+        <div class="form-field">
+          <label>Not <span class="lbl-tag">opsiyonel</span></label>
+          <textarea id="inp-tx-note" placeholder="..." rows="2"></textarea>
+        </div>
+
+        <div id="new-tx-error" class="error-msg" style="display:none;"></div>
+        <div class="modal-actions">
+          <button id="btn-tx-cancel" class="btn-secondary">İptal</button>
+          <button id="btn-tx-save" class="btn-primary">Kaydet</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    let txType = "purchase";
+
+    const purchaseBtn = document.getElementById("btn-tx-purchase");
+    const paymentBtn = document.getElementById("btn-tx-payment");
+
+    const setType = (t) => {
+      txType = t;
+      purchaseBtn.classList.toggle("active", t === "purchase");
+      paymentBtn.classList.toggle("active", t === "payment");
+    };
+    purchaseBtn.addEventListener("click", () => setType("purchase"));
+    paymentBtn.addEventListener("click", () => setType("payment"));
+
+    document.getElementById("btn-tx-cancel").addEventListener("click", () => modal.remove());
+
+    document.getElementById("btn-tx-save").addEventListener("click", async () => {
+      const supplierId = document.getElementById("inp-tx-supplier").value;
+      const amount = fmt.parseNum(document.getElementById("inp-tx-amount").value);
+      const date = document.getElementById("inp-tx-date").value;
+      const note = document.getElementById("inp-tx-note").value.trim();
+
+      if (amount <= 0) {
+        UI.showError("new-tx-error", "Tutar gerekli (₺0'dan büyük olmalı)");
+        return;
+      }
+      if (!date) {
+        UI.showError("new-tx-error", "Tarih gerekli");
+        return;
+      }
+      const supplier = this.state.suppliers.find(s => s.id === supplierId);
+      if (!supplier) {
+        UI.showError("new-tx-error", "Toptancı seçilmedi");
+        return;
+      }
+
+      try {
+        await this.createTx({
+          supplierId,
+          supplierName: supplier.name,
+          type: txType,
+          amount,
+          date,
+          note
+        });
+        modal.remove();
+        UI.success("Eklendi ✓");
+      } catch (e) {
+        UI.showError("new-tx-error", "Hata: " + e.message);
+      }
+    });
+  },
+
+  async createTx(payload) {
+    const id = randomId("tx");
+    const data = {
+      ...payload,
+      createdBy: State.player.name,
+      createdAt: Date.now()
+    };
+    const ref = doc(db, "broop_app", State.cloudId, "supplierTx", id);
+    await setDoc(ref, {
+      data: Crypto.encrypt(data, State.key),
+      date: payload.date,
+      updatedAt: Date.now()
+    });
+    return id;
+  },
+
+  async confirmDeleteTx(txId) {
+    const tx = this.state.transactions.find(t => t.id === txId);
+    if (!tx) return;
+    const typeLabel = tx.type === "purchase" ? "mal alımı" : "ödeme";
+    const msg = `${fmt.dateKeyToDisplay(tx.date)} tarihli ${fmt.money(tx.amount)} ${typeLabel} işlemini silmek istediğine emin misin?\nBu geri alınamaz.`;
+    if (!confirm(msg)) return;
+
+    try {
+      const ref = doc(db, "broop_app", State.cloudId, "supplierTx", txId);
+      await deleteDoc(ref);
+      UI.success("Silindi");
+    } catch (e) {
+      UI.error("Silinemedi: " + e.message);
+    }
+  },
+
+  async confirmDeleteSupplier(supplier) {
+    const txCount = this.state.transactions.filter(t => t.supplierId === supplier.id).length;
+    let msg = `"${supplier.name}" toptancısını silmek istediğine emin misin?`;
+    if (txCount > 0) {
+      msg += `\n\nBu toptancıya ait ${txCount} işlem de silinecek. GERİ ALINAMAZ.`;
+    }
+    if (!confirm(msg)) return;
+    if (!confirm("Son uyarı: bu işlem GERİ ALINAMAZ. Devam?")) return;
+
+    try {
+      const batch = writeBatch(db);
+      // İşlemleri sil
+      this.state.transactions
+        .filter(t => t.supplierId === supplier.id)
+        .forEach(t => batch.delete(doc(db, "broop_app", State.cloudId, "supplierTx", t.id)));
+      // Toptancıyı sil
+      batch.delete(doc(db, "broop_app", State.cloudId, "suppliers", supplier.id));
+      await batch.commit();
+
+      this.state.view = "list";
+      this.state.selectedSupplierId = null;
+      UI.success("Silindi");
+    } catch (e) {
+      UI.error("Silinemedi: " + e.message);
+    }
+  },
+
+  // =================== IMPORT ===================
+  showImport() {
+    const data = EXCEL_SUPPLIER_DATA;
+    const uniqueNames = [...new Set(data.map(r => r[1]))];
+
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop";
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>Excel'den İçe Aktar</h3>
+        <p class="modal-info">
+          Excel dosyandan <strong>${uniqueNames.length}</strong> toptancı ve <strong>${data.length}</strong> işlem buldum.
+        </p>
+        <p style="font-size: 12px; color: var(--text-secondary);">
+          Toptancılar: ${uniqueNames.map(n => escapeHtml(n)).join(", ")}
+        </p>
+        <div id="sup-import-progress" style="display:none;">
+          <div class="progress-bar"><div class="progress-fill" id="sup-progress-fill"></div></div>
+          <div id="sup-progress-text">0 / 0</div>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-sup-import-cancel" class="btn-secondary">İptal</button>
+          <button id="btn-sup-import-confirm" class="btn-primary">İçe Aktar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById("btn-sup-import-cancel").addEventListener("click", () => modal.remove());
+    document.getElementById("btn-sup-import-confirm").addEventListener("click", async () => {
+      await this.runImport(data, uniqueNames, modal);
+    });
+  },
+
+  async runImport(rows, uniqueNames, modal) {
+    modal.querySelector("#sup-import-progress").style.display = "";
+    modal.querySelector("#btn-sup-import-confirm").disabled = true;
+    modal.querySelector("#btn-sup-import-cancel").disabled = true;
+
+    const total = uniqueNames.length + rows.length;
+    let done = 0;
+    const now = Date.now();
+    const player = State.player.name;
+
+    try {
+      // 1) Toptancılar oluştur (id'leri sakla)
+      const nameToId = {};
+      const batch1 = writeBatch(db);
+      uniqueNames.forEach(name => {
+        const id = randomId("sup");
+        nameToId[name] = id;
+        const data = { name, createdBy: player, createdAt: now };
+        const ref = doc(db, "broop_app", State.cloudId, "suppliers", id);
+        batch1.set(ref, {
+          data: Crypto.encrypt(data, State.key),
+          updatedAt: now
+        });
+      });
+      await batch1.commit();
+      done += uniqueNames.length;
+      modal.querySelector("#sup-progress-fill").style.width = (done / total * 100) + "%";
+      modal.querySelector("#sup-progress-text").textContent = `${done} / ${total}`;
+
+      // 2) İşlemler ekle
+      const chunkSize = 50;
+      for (let i = 0; i < rows.length; i += chunkSize) {
+        const chunk = rows.slice(i, i + chunkSize);
+        const batch = writeBatch(db);
+        chunk.forEach(row => {
+          const [date, supplierName, type, amount] = row;
+          const supplierId = nameToId[supplierName];
+          const id = randomId("tx");
+          const data = {
+            supplierId,
+            supplierName,
+            type,
+            amount: +amount,
+            date,
+            note: "",
+            createdBy: player,
+            createdAt: now,
+            importedFromExcel: true
+          };
+          const ref = doc(db, "broop_app", State.cloudId, "supplierTx", id);
+          batch.set(ref, {
+            data: Crypto.encrypt(data, State.key),
+            date,
+            updatedAt: now
+          });
+        });
+        await batch.commit();
+        done += chunk.length;
+        const pct = Math.round(done / total * 100);
+        modal.querySelector("#sup-progress-fill").style.width = pct + "%";
+        modal.querySelector("#sup-progress-text").textContent = `${done} / ${total}`;
+      }
+
+      setTimeout(() => {
+        modal.remove();
+        UI.success(`${uniqueNames.length} toptancı, ${rows.length} işlem aktarıldı ✓`);
+      }, 400);
+    } catch (e) {
+      console.error("Supplier import hatası:", e);
+      modal.remove();
+      UI.error(`İçe aktarım hatası: ${e.message}`);
+    }
+  }
+};
+// =====================================================================
+// Excel gömülü süt alımı verisi
+// Sıralama: [date, kg, price]
+// =====================================================================
+const EXCEL_MILK_DATA = [["2026-04-06",60.0,2400.0],["2026-04-22",80.0,3200.0],["2026-04-28",80.0,3200.0],["2026-05-10",80.0,3200.0],["2026-05-12",80.0,3440.0]];
+
+const Milk = {
+  el: null,
+  state: {
+    entries: [],
+    unsub: null
+  },
+
+  start() {
+    this.el = document.getElementById("milk-content");
+    this.render();
+    this.attachListener();
+  },
+
+  stop() {
+    if (this.state.unsub) { this.state.unsub(); this.state.unsub = null; }
+  },
+
+  attachListener() {
+    if (this.state.unsub) this.state.unsub();
+    const ref = collection(db, "broop_app", State.cloudId, "milk");
+    this.state.unsub = onSnapshot(ref, (snap) => {
+      const list = [];
+      snap.forEach(d => {
+        const raw = d.data();
+        const dec = Crypto.decrypt(raw.data, State.key);
+        if (dec) list.push({ id: d.id, ...dec });
+      });
+      list.sort((a, b) => b.date.localeCompare(a.date));
+      this.state.entries = list;
+      this.render();
+    }, (err) => console.error("Milk listener:", err));
+  },
+
+  getMonthStats() {
+    const monthStart = fmt.firstOfMonth(new Date());
+    const e = this.state.entries.filter(x => x.date >= monthStart);
+    return {
+      count: e.length,
+      totalKg: e.reduce((s, x) => s + (x.kg || 0), 0),
+      totalPrice: e.reduce((s, x) => s + (x.price || 0), 0)
+    };
+  },
+
+  getDefaultPrice() {
+    return State.settings?.milk?.defaultPricePerKg ?? 43;
+  },
+
+  render() {
+    if (!this.el) return;
+    const monthStats = this.getMonthStats();
+    const monthName = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran",
+                      "Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"][new Date().getMonth()];
+    const avgUnit = monthStats.totalKg > 0 ? monthStats.totalPrice / monthStats.totalKg : 0;
+    const defaultPrice = this.getDefaultPrice();
+
+    let html = `
+      <div class="settings-bar">
+        <button class="btn-settings" id="btn-milk-settings">⚙️ Birim fiyat: ₺${defaultPrice}/kg</button>
+      </div>
+
+      <div class="milk-stats">
+        <div class="milk-stat-card">
+          <div class="stat-label">${monthName} · ${monthStats.count} alım</div>
+          <div class="stat-row">
+            <div>
+              <div class="stat-big">${monthStats.totalKg.toFixed(0)}<small> KG</small></div>
+              <div class="stat-meta">toplam miktar</div>
+            </div>
+            <div style="text-align: right;">
+              <div class="stat-big" style="color: var(--accent-supplier);">${fmt.money(monthStats.totalPrice)}</div>
+              ${avgUnit > 0 ? `<div class="stat-meta">~ ₺${avgUnit.toFixed(1)}/kg</div>` : '<div class="stat-meta">—</div>'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="supplier-actions" style="grid-template-columns: 1fr;">
+        <button id="btn-add-milk" class="primary">+ Süt Alımı Ekle</button>
+      </div>
+    `;
+
+    if (this.state.entries.length === 0) {
+      html += `
+        <div class="empty-list">
+          <p>Henüz süt alımı yok.</p>
+          <button id="btn-milk-import" class="btn-secondary" style="max-width:280px; margin: 8px auto;">📥 Excel'den içe aktar</button>
+        </div>
+      `;
+    } else {
+      html += `<div class="list-header"><span>Tüm Alımlar (${this.state.entries.length})</span><button id="btn-milk-import" class="btn-mini">📥 Excel'den içe aktar</button></div>`;
+      html += `<div class="entry-list">`;
+      this.state.entries.forEach(e => {
+        const unit = e.kg > 0 ? (e.price / e.kg) : 0;
+        html += `
+          <div class="entry-item milk" data-id="${e.id}">
+            <div class="entry-main">
+              <div class="entry-date">${fmt.dateKeyToDisplay(e.date)}</div>
+              <div class="entry-meta">
+                <span>${e.kg.toFixed(0)} KG</span>
+                ${unit > 0 ? `<span>₺${unit.toFixed(1)}/kg</span>` : ""}
+                ${e.note ? `<span title="${escapeHtml(e.note)}">📝</span>` : ""}
+              </div>
+            </div>
+            <div class="entry-side">
+              <div class="entry-total">${fmt.money(e.price)}</div>
+              <button class="btn-delete" data-id="${e.id}" title="Sil">×</button>
+            </div>
+          </div>
+        `;
+      });
+      html += "</div>";
+    }
+
+    this.el.innerHTML = html;
+
+    document.getElementById("btn-milk-settings").addEventListener("click", () => this.showSettings());
+    document.getElementById("btn-add-milk").addEventListener("click", () => this.showDialog(null));
+
+    const impBtn = document.getElementById("btn-milk-import");
+    if (impBtn) impBtn.addEventListener("click", () => this.showImport());
+
+    this.el.querySelectorAll(".entry-item.milk").forEach(item => {
+      item.addEventListener("click", (ev) => {
+        if (ev.target.classList.contains("btn-delete")) return;
+        const id = item.dataset.id;
+        const entry = this.state.entries.find(e => e.id === id);
+        if (entry) this.showDialog(entry);
+      });
+    });
+
+    this.el.querySelectorAll(".btn-delete[data-id]").forEach(btn => {
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        this.confirmDelete(btn.dataset.id);
+      });
+    });
+  },
+
+  showSettings() {
+    const current = this.getDefaultPrice();
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop";
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>Sütçü Ayarları</h3>
+        <p class="modal-info" style="margin-bottom: 16px;">
+          Default birim fiyat, yeni süt alımı eklerken otomatik olarak kullanılır.
+          Zam geldikçe buradan güncelleyebilirsin.
+        </p>
+        <div class="form-field">
+          <label>Default Birim Fiyat (₺/kg)</label>
+          <div class="input-money">
+            <span class="prefix">₺</span>
+            <input type="text" inputmode="decimal" id="inp-default-price" autocomplete="off" value="${current}" />
+          </div>
+          <div class="field-hint">Mevcut: ₺${current}/kg</div>
+        </div>
+        <div id="settings-error" class="error-msg" style="display:none;"></div>
+        <div class="modal-actions">
+          <button id="btn-settings-cancel" class="btn-secondary">İptal</button>
+          <button id="btn-settings-save" class="btn-primary">Kaydet</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const inp = document.getElementById("inp-default-price");
+    inp.focus();
+    inp.select();
+
+    document.getElementById("btn-settings-cancel").addEventListener("click", () => modal.remove());
+
+    document.getElementById("btn-settings-save").addEventListener("click", async () => {
+      const newPrice = fmt.parseNum(inp.value);
+      if (newPrice <= 0) {
+        UI.showError("settings-error", "Geçerli bir fiyat gir");
+        return;
+      }
+      try {
+        const newSettings = {
+          ...State.settings,
+          milk: { ...(State.settings.milk || {}), defaultPricePerKg: newPrice }
+        };
+        const ref = doc(db, "broop_app", State.cloudId, "settings", "main");
+        await setDoc(ref, {
+          data: Crypto.encrypt(newSettings, State.key),
+          updatedAt: Date.now(),
+          updatedBy: State.player.name
+        });
+        modal.remove();
+        UI.success("Birim fiyat ₺" + newPrice + "/kg olarak güncellendi");
+      } catch (e) {
+        UI.showError("settings-error", "Hata: " + e.message);
+      }
+    });
+
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("btn-settings-save").click();
+    });
+  },
+
+  showDialog(existing) {
+    const defaultPrice = this.getDefaultPrice();
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop";
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>${existing ? "Süt Alımı Düzenle" : "Yeni Süt Alımı"}</h3>
+
+        <div class="form-field">
+          <label>Tarih</label>
+          <input type="date" id="inp-milk-date" class="field-input" value="${existing ? existing.date : fmt.todayKey()}" />
+        </div>
+
+        <div class="form-field">
+          <label>Miktar (KG)</label>
+          <div class="input-money">
+            <span class="prefix">⚖️</span>
+            <input type="text" inputmode="decimal" id="inp-milk-kg" placeholder="80" autocomplete="off" value="${existing ? existing.kg : ''}" />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Toplam Fiyat <span class="lbl-tag" id="auto-tag" style="display:none;">otomatik</span></label>
+          <div class="input-money">
+            <span class="prefix">₺</span>
+            <input type="text" inputmode="decimal" id="inp-milk-price" placeholder="0" autocomplete="off" value="${existing ? existing.price : ''}" />
+          </div>
+          <div class="field-hint" id="milk-unit-hint">Birim fiyat: <strong>—</strong> ${!existing ? `<span style="opacity:0.6;">(default ₺${defaultPrice}/kg)</span>` : ''}</div>
+        </div>
+
+        <div class="form-field">
+          <label>Not <span class="lbl-tag">opsiyonel</span></label>
+          <textarea id="inp-milk-note" placeholder="..." rows="2">${existing ? escapeHtml(existing.note || "") : ""}</textarea>
+        </div>
+
+        <div id="milk-error" class="error-msg" style="display:none;"></div>
+        <div class="modal-actions">
+          <button id="btn-milk-cancel" class="btn-secondary">İptal</button>
+          ${existing ? '<button id="btn-milk-del" class="btn-secondary" style="color: var(--danger);">Sil</button>' : ''}
+          <button id="btn-milk-save" class="btn-primary">${existing ? "Güncelle" : "Kaydet"}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const kgInput = document.getElementById("inp-milk-kg");
+    const priceInput = document.getElementById("inp-milk-price");
+    const unitHint = document.getElementById("milk-unit-hint");
+    const autoTag = document.getElementById("auto-tag");
+
+    // Track: kullanıcı fiyatı manuel değiştirdi mi?
+    // Yeni kayıt için: başlangıçta false, kullanıcı fiyatı elle değiştirirse true olur
+    // Düzenleme için: her zaman true (otomatik doldurma yapmıyoruz)
+    let priceManual = !!existing;
+
+    const renderHint = () => {
+      const kg = fmt.parseNum(kgInput.value);
+      const price = fmt.parseNum(priceInput.value);
+      if (kg > 0 && price > 0) {
+        unitHint.innerHTML = `Birim fiyat: <strong style="color: var(--accent-income);">₺${(price / kg).toFixed(2)}/kg</strong>`;
+      } else if (!priceManual && !existing) {
+        unitHint.innerHTML = `Birim fiyat: <strong>—</strong> <span style="opacity:0.6;">(default ₺${defaultPrice}/kg)</span>`;
+      } else {
+        unitHint.innerHTML = `Birim fiyat: <strong>—</strong>`;
+      }
+      autoTag.style.display = (!priceManual && fmt.parseNum(priceInput.value) > 0) ? "" : "none";
+    };
+
+    // KG değişince: eğer kullanıcı fiyatı manuel değiştirmediyse, fiyatı otomatik hesapla
+    kgInput.addEventListener("input", () => {
+      const kg = fmt.parseNum(kgInput.value);
+      if (!priceManual) {
+        if (kg > 0) {
+          priceInput.value = (kg * defaultPrice).toFixed(0);
+        } else {
+          priceInput.value = "";
+        }
+      }
+      renderHint();
+    });
+
+    // Fiyat manuel değişirse, flag'i kaldır
+    priceInput.addEventListener("input", () => {
+      priceManual = true;
+      renderHint();
+    });
+
+    renderHint();
+
+    document.getElementById("btn-milk-cancel").addEventListener("click", () => modal.remove());
+
+    if (existing) {
+      document.getElementById("btn-milk-del").addEventListener("click", () => {
+        modal.remove();
+        this.confirmDelete(existing.id);
+      });
+    }
+
+    document.getElementById("btn-milk-save").addEventListener("click", async () => {
+      const date = document.getElementById("inp-milk-date").value;
+      const kg = fmt.parseNum(kgInput.value);
+      const price = fmt.parseNum(priceInput.value);
+      const note = document.getElementById("inp-milk-note").value.trim();
+
+      if (!date) { UI.showError("milk-error", "Tarih gerekli"); return; }
+      if (kg <= 0) { UI.showError("milk-error", "Miktar (KG) gerekli"); return; }
+      if (price <= 0) { UI.showError("milk-error", "Fiyat gerekli"); return; }
+
+      try {
+        await this.save({ id: existing?.id, date, kg, price, note });
+        modal.remove();
+        UI.success(existing ? "Güncellendi ✓" : "Eklendi ✓");
+      } catch (e) {
+        UI.showError("milk-error", "Hata: " + e.message);
+      }
+    });
+  },
+
+  async save({ id, date, kg, price, note }) {
+    const now = Date.now();
+    const player = State.player.name;
+    const docId = id || randomId("milk");
+    const existing = id ? this.state.entries.find(e => e.id === id) : null;
+
+    const data = {
+      date, kg, price, note,
+      createdBy: existing ? existing.createdBy : player,
+      createdAt: existing ? existing.createdAt : now,
+      lastEditedBy: player,
+      updatedAt: now
+    };
+
+    const ref = doc(db, "broop_app", State.cloudId, "milk", docId);
+    await setDoc(ref, {
+      data: Crypto.encrypt(data, State.key),
+      date,
+      updatedAt: now
+    });
+  },
+
+  async confirmDelete(id) {
+    const entry = this.state.entries.find(e => e.id === id);
+    if (!entry) return;
+    const msg = `${fmt.dateKeyToDisplay(entry.date)} tarihli ${entry.kg.toFixed(0)} KG / ${fmt.money(entry.price)} süt alımını silmek istediğine emin misin?\nBu geri alınamaz.`;
+    if (!confirm(msg)) return;
+
+    try {
+      await deleteDoc(doc(db, "broop_app", State.cloudId, "milk", id));
+      UI.success("Silindi");
+    } catch (e) {
+      UI.error("Silinemedi: " + e.message);
+    }
+  },
+
+  showImport() {
+    const data = EXCEL_MILK_DATA;
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop";
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>Süt Alımı İçe Aktar</h3>
+        <p class="modal-info">
+          Excel'den <strong>${data.length}</strong> süt alımı buldum
+          (${data[0][0]} → ${data[data.length-1][0]} arası).
+        </p>
+        <div id="milk-imp-progress" style="display:none;">
+          <div class="progress-bar"><div class="progress-fill" id="milk-imp-fill"></div></div>
+          <div id="milk-imp-text">0 / 0</div>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-milk-imp-cancel" class="btn-secondary">İptal</button>
+          <button id="btn-milk-imp-go" class="btn-primary">İçe Aktar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById("btn-milk-imp-cancel").addEventListener("click", () => modal.remove());
+    document.getElementById("btn-milk-imp-go").addEventListener("click", async () => {
+      modal.querySelector("#milk-imp-progress").style.display = "";
+      modal.querySelector("#btn-milk-imp-go").disabled = true;
+      modal.querySelector("#btn-milk-imp-cancel").disabled = true;
+      const now = Date.now();
+      const player = State.player.name;
+      try {
+        const batch = writeBatch(db);
+        data.forEach(row => {
+          const [date, kg, price] = row;
+          const id = randomId("milk");
+          const obj = {
+            date, kg: +kg, price: +price,
+            note: "",
+            createdBy: player, createdAt: now,
+            lastEditedBy: player, updatedAt: now,
+            importedFromExcel: true
+          };
+          batch.set(doc(db, "broop_app", State.cloudId, "milk", id), {
+            data: Crypto.encrypt(obj, State.key),
+            date, updatedAt: now
+          });
+        });
+        await batch.commit();
+        modal.querySelector("#milk-imp-fill").style.width = "100%";
+        modal.querySelector("#milk-imp-text").textContent = `${data.length} / ${data.length}`;
+        setTimeout(() => {
+          modal.remove();
+          UI.success(`${data.length} kayıt aktarıldı ✓`);
+        }, 400);
+      } catch (e) {
+        modal.remove();
+        UI.error("Hata: " + e.message);
+      }
+    });
+  }
+};
+
+// =====================================================================
+// Excel gömülü notlar
+// Sıralama: [date, text]
+// =====================================================================
+const EXCEL_NOTES_DATA = [["2026-01-06", "7 HAZİRAN ALGİDA SENET TUTARI 79220"]];
+
+const Notes = {
+  el: null,
+  state: {
+    entries: [],
+    unsub: null
+  },
+
+  start() {
+    this.el = document.getElementById("notes-content");
+    this.render();
+    this.attachListener();
+  },
+
+  stop() {
+    if (this.state.unsub) { this.state.unsub(); this.state.unsub = null; }
+  },
+
+  attachListener() {
+    if (this.state.unsub) this.state.unsub();
+    const ref = collection(db, "broop_app", State.cloudId, "notes");
+    this.state.unsub = onSnapshot(ref, (snap) => {
+      const list = [];
+      snap.forEach(d => {
+        const raw = d.data();
+        const dec = Crypto.decrypt(raw.data, State.key);
+        if (dec) list.push({ id: d.id, ...dec });
+      });
+      // Yapılmamış üstte, yapılmış altta, içinde tarihe göre azalan
+      list.sort((a, b) => {
+        if (!!a.done !== !!b.done) return a.done ? 1 : -1;
+        return b.date.localeCompare(a.date);
+      });
+      this.state.entries = list;
+      this.render();
+    }, (err) => console.error("Notes listener:", err));
+  },
+
+  render() {
+    if (!this.el) return;
+    const undone = this.state.entries.filter(e => !e.done).length;
+
+    let html = `
+      <div class="supplier-actions" style="grid-template-columns: 1fr;">
+        <button id="btn-add-note" class="primary">+ Yeni Not</button>
+      </div>
+    `;
+
+    if (this.state.entries.length === 0) {
+      html += `
+        <div class="empty-list">
+          <p>Henüz not yok.</p>
+          <p style="font-size: 12px; opacity: 0.7; margin: 0 0 12px;">Hatırlatmak istediklerini buraya ekle. Örn: senet tarihleri, sipariş notları, yapılacak işler.</p>
+          <button id="btn-notes-import" class="btn-secondary" style="max-width:280px; margin: 0 auto;">📥 Excel'den içe aktar</button>
+        </div>
+      `;
+    } else {
+      html += `<div class="list-header"><span>${undone} aktif · ${this.state.entries.length} toplam</span><button id="btn-notes-import" class="btn-mini">📥 Excel'den</button></div>`;
+      html += `<div class="note-list">`;
+      this.state.entries.forEach(e => {
+        html += `
+          <div class="note-item ${e.done ? 'done' : ''}" data-id="${e.id}">
+            <div class="note-check" data-toggle="${e.id}" title="Tamamla"></div>
+            <div class="note-body">
+              <div class="note-date">${fmt.dateKeyToDisplay(e.date)}</div>
+              <div class="note-text">${escapeHtml(e.text)}</div>
+              <div class="note-meta">${escapeHtml(e.createdBy || '?')}${e.importedFromExcel ? ' · excel' : ''}</div>
+            </div>
+            <div class="note-actions">
+              <button class="btn-delete" data-id="${e.id}" title="Sil">×</button>
+            </div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+    }
+
+    this.el.innerHTML = html;
+
+    document.getElementById("btn-add-note").addEventListener("click", () => this.showDialog(null));
+
+    const impBtn = document.getElementById("btn-notes-import");
+    if (impBtn) impBtn.addEventListener("click", () => this.showImport());
+
+    this.el.querySelectorAll(".note-check[data-toggle]").forEach(c => {
+      c.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        this.toggleDone(c.dataset.toggle);
+      });
+    });
+
+    this.el.querySelectorAll(".note-item").forEach(item => {
+      item.addEventListener("click", (ev) => {
+        if (ev.target.closest(".note-check") || ev.target.closest(".btn-delete")) return;
+        const id = item.dataset.id;
+        const entry = this.state.entries.find(e => e.id === id);
+        if (entry) this.showDialog(entry);
+      });
+    });
+
+    this.el.querySelectorAll(".btn-delete[data-id]").forEach(btn => {
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        this.confirmDelete(btn.dataset.id);
+      });
+    });
+  },
+
+  showDialog(existing) {
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop";
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>${existing ? "Notu Düzenle" : "Yeni Not"}</h3>
+
+        <div class="form-field">
+          <label>Tarih</label>
+          <input type="date" id="inp-note-date" class="field-input" value="${existing ? existing.date : fmt.todayKey()}" />
+          <div class="field-hint">Hatırlatma günü veya not tarihi</div>
+        </div>
+
+        <div class="form-field">
+          <label>Not</label>
+          <textarea id="inp-note-text" placeholder="Örn: 7 Haziran Algida senet ödemesi 79.220₺" rows="4">${existing ? escapeHtml(existing.text) : ""}</textarea>
+        </div>
+
+        <div id="note-error" class="error-msg" style="display:none;"></div>
+        <div class="modal-actions">
+          <button id="btn-note-cancel" class="btn-secondary">İptal</button>
+          ${existing ? '<button id="btn-note-del" class="btn-secondary" style="color: var(--danger);">Sil</button>' : ''}
+          <button id="btn-note-save" class="btn-primary">${existing ? "Güncelle" : "Kaydet"}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const textEl = document.getElementById("inp-note-text");
+    textEl.focus();
+
+    document.getElementById("btn-note-cancel").addEventListener("click", () => modal.remove());
+
+    if (existing) {
+      document.getElementById("btn-note-del").addEventListener("click", () => {
+        modal.remove();
+        this.confirmDelete(existing.id);
+      });
+    }
+
+    document.getElementById("btn-note-save").addEventListener("click", async () => {
+      const date = document.getElementById("inp-note-date").value;
+      const text = textEl.value.trim();
+      if (!date) { UI.showError("note-error", "Tarih gerekli"); return; }
+      if (!text) { UI.showError("note-error", "Not metni gerekli"); return; }
+
+      try {
+        await this.save({ id: existing?.id, date, text });
+        modal.remove();
+        UI.success(existing ? "Güncellendi ✓" : "Eklendi ✓");
+      } catch (e) {
+        UI.showError("note-error", "Hata: " + e.message);
+      }
+    });
+  },
+
+  async save({ id, date, text }) {
+    const now = Date.now();
+    const player = State.player.name;
+    const docId = id || randomId("note");
+    const existing = id ? this.state.entries.find(e => e.id === id) : null;
+
+    const data = {
+      date, text,
+      done: existing ? !!existing.done : false,
+      createdBy: existing ? existing.createdBy : player,
+      createdAt: existing ? existing.createdAt : now,
+      lastEditedBy: player,
+      updatedAt: now
+    };
+
+    const ref = doc(db, "broop_app", State.cloudId, "notes", docId);
+    await setDoc(ref, {
+      data: Crypto.encrypt(data, State.key),
+      date, updatedAt: now
+    });
+  },
+
+  async toggleDone(id) {
+    const entry = this.state.entries.find(e => e.id === id);
+    if (!entry) return;
+    try {
+      const now = Date.now();
+      const data = {
+        date: entry.date,
+        text: entry.text,
+        done: !entry.done,
+        createdBy: entry.createdBy,
+        createdAt: entry.createdAt,
+        lastEditedBy: State.player.name,
+        updatedAt: now,
+        importedFromExcel: entry.importedFromExcel
+      };
+
+      const ref = doc(db, "broop_app", State.cloudId, "notes", id);
+      await setDoc(ref, {
+        data: Crypto.encrypt(data, State.key),
+        date: data.date,
+        updatedAt: now
+      });
+    } catch (e) {
+      UI.error("Hata: " + e.message);
+    }
+  },
+
+  async confirmDelete(id) {
+    const entry = this.state.entries.find(e => e.id === id);
+    if (!entry) return;
+    const preview = entry.text.length > 50 ? entry.text.slice(0, 50) + "..." : entry.text;
+    if (!confirm(`"${preview}"\n\nBu notu silmek istediğine emin misin? Geri alınamaz.`)) return;
+    try {
+      await deleteDoc(doc(db, "broop_app", State.cloudId, "notes", id));
+      UI.success("Silindi");
+    } catch (e) {
+      UI.error("Silinemedi: " + e.message);
+    }
+  },
+
+  showImport() {
+    const data = EXCEL_NOTES_DATA;
+    const modal = document.createElement("div");
+    modal.className = "modal-backdrop";
+    modal.innerHTML = `
+      <div class="modal">
+        <h3>Notları İçe Aktar</h3>
+        <p class="modal-info">
+          Excel'den <strong>${data.length}</strong> not buldum:
+        </p>
+        ${data.map(r => `
+          <div style="background: var(--bg-deep); padding: 10px 12px; border-radius: 8px; margin-bottom: 6px;">
+            <div style="font-size: 11px; color: var(--text-tertiary); font-family: monospace;">${r[0]}</div>
+            <div style="font-size: 13px; margin-top: 2px;">${escapeHtml(r[1])}</div>
+          </div>
+        `).join("")}
+        <div class="modal-actions">
+          <button id="btn-notes-imp-cancel" class="btn-secondary">İptal</button>
+          <button id="btn-notes-imp-go" class="btn-primary">İçe Aktar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById("btn-notes-imp-cancel").addEventListener("click", () => modal.remove());
+    document.getElementById("btn-notes-imp-go").addEventListener("click", async () => {
+      const now = Date.now();
+      const player = State.player.name;
+      try {
+        const batch = writeBatch(db);
+        data.forEach(row => {
+          const [date, text] = row;
+          const id = randomId("note");
+          const obj = {
+            date, text,
+            done: false,
+            createdBy: player, createdAt: now,
+            lastEditedBy: player, updatedAt: now,
+            importedFromExcel: true
+          };
+          batch.set(doc(db, "broop_app", State.cloudId, "notes", id), {
+            data: Crypto.encrypt(obj, State.key),
+            date, updatedAt: now
+          });
+        });
+        await batch.commit();
+        modal.remove();
+        UI.success(`${data.length} not aktarıldı ✓`);
+      } catch (e) {
+        modal.remove();
+        UI.error("Hata: " + e.message);
+      }
+    });
+  }
+};
+
+const Report = {
+  el: null,
+  state: {
+    income: [],
+    expense: [],
+    unsubIncome: null,
+    unsubExpense: null
+  },
+
+  start() {
+    this.el = document.getElementById("report-content");
+    this.render();
+    this.attachListeners();
+  },
+
+  stop() {
+    if (this.state.unsubIncome) { this.state.unsubIncome(); this.state.unsubIncome = null; }
+    if (this.state.unsubExpense) { this.state.unsubExpense(); this.state.unsubExpense = null; }
+  },
+
+  attachListeners() {
+    if (this.state.unsubIncome) this.state.unsubIncome();
+    if (this.state.unsubExpense) this.state.unsubExpense();
+
+    const incRef = collection(db, "broop_app", State.cloudId, "income");
+    this.state.unsubIncome = onSnapshot(incRef, (snap) => {
+      const list = [];
+      snap.forEach(d => {
+        const raw = d.data();
+        const dec = Crypto.decrypt(raw.data, State.key);
+        if (dec) list.push(dec);
+      });
+      list.sort((a, b) => a.date.localeCompare(b.date));
+      this.state.income = list;
+      this.render();
+    }, (err) => console.error("Report income listener:", err));
+
+    const expRef = collection(db, "broop_app", State.cloudId, "expense");
+    this.state.unsubExpense = onSnapshot(expRef, (snap) => {
+      const list = [];
+      snap.forEach(d => {
+        const raw = d.data();
+        const dec = Crypto.decrypt(raw.data, State.key);
+        if (dec) list.push(dec);
+      });
+      list.sort((a, b) => a.date.localeCompare(b.date));
+      this.state.expense = list;
+      this.render();
+    }, (err) => console.error("Report expense listener:", err));
+  },
+
+  groupByMonth() {
+    const map = {};
+    const monthNames = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran",
+                        "Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+    const ensure = (key) => {
+      if (!map[key]) {
+        const [y, m] = key.split("-");
+        map[key] = {
+          key, year: y, monthNum: parseInt(m),
+          name: monthNames[parseInt(m) - 1] + " " + y,
+          income: 0, expense: 0, net: 0,
+          incomeDays: 0, expenseDays: 0,
+          channels: { cash: 0, card: 0, getirNet: 0, trendyolNet: 0, kasadan: 0 }
+        };
+      }
+      return map[key];
+    };
+
+    this.state.income.forEach(e => {
+      const m = ensure(e.date.slice(0, 7));
+      m.income += e.total || 0;
+      m.incomeDays++;
+      m.channels.cash += e.cash || 0;
+      m.channels.card += e.card || 0;
+      m.channels.getirNet += e.getirNet || 0;
+      m.channels.trendyolNet += e.trendyolNet || 0;
+      m.channels.kasadan += e.kasadanCikan || 0;
+    });
+
+    this.state.expense.forEach(e => {
+      const m = ensure(e.date.slice(0, 7));
+      m.expense += e.total || 0;
+      m.expenseDays++;
+    });
+
+    Object.values(map).forEach(m => { m.net = m.income - m.expense; });
+    return Object.values(map).sort((a, b) => a.key.localeCompare(b.key));
+  },
+
+  calcYearTotal(months) {
+    return months.reduce((acc, m) => ({
+      income: acc.income + m.income,
+      expense: acc.expense + m.expense,
+      net: acc.net + m.net,
+      incomeDays: acc.incomeDays + m.incomeDays
+    }), { income: 0, expense: 0, net: 0, incomeDays: 0 });
+  },
+
+  findRecords() {
+    const r = {
+      maxDay: null, maxCash: null, maxCard: null,
+      maxGetir: null, maxTrendyol: null, maxExpense: null
+    };
+    this.state.income.forEach(e => {
+      if ((e.total || 0) > 0 && (!r.maxDay || e.total > r.maxDay.total)) r.maxDay = e;
+      if ((e.cash || 0) > 0 && (!r.maxCash || e.cash > r.maxCash.cash)) r.maxCash = e;
+      if ((e.card || 0) > 0 && (!r.maxCard || e.card > r.maxCard.card)) r.maxCard = e;
+      if ((e.getirGross || 0) > 0 && (!r.maxGetir || e.getirGross > r.maxGetir.getirGross)) r.maxGetir = e;
+      if ((e.trendyolGross || 0) > 0 && (!r.maxTrendyol || e.trendyolGross > r.maxTrendyol.trendyolGross)) r.maxTrendyol = e;
+    });
+    this.state.expense.forEach(e => {
+      if ((e.total || 0) > 0 && (!r.maxExpense || e.total > r.maxExpense.total)) r.maxExpense = e;
+    });
+    return r;
+  },
+
+  render() {
+    if (!this.el) return;
+
+    if (this.state.income.length === 0 && this.state.expense.length === 0) {
+      this.el.innerHTML = `
+        <div class="empty-list">
+          <p>Henüz veri yok.</p>
+          <p style="font-size: 12px; opacity: 0.7;">Gelir ve gider kaydı eklendikçe raporlar burada görünecek.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const months = this.groupByMonth();
+    const yearTotal = this.calcYearTotal(months);
+    const records = this.findRecords();
+    const currentMonth = fmt.todayKey().slice(0, 7);
+
+    let html = "";
+
+    // === Yıllık özet ===
+    const netCls = yearTotal.net >= 0 ? "" : "negative";
+    const netSign = yearTotal.net >= 0 ? "" : "−";
+    html += `
+      <div class="report-section">
+        <div class="report-section-title">2026 Yıllık</div>
+        <div class="year-summary">
+          <div class="year-label">${yearTotal.incomeDays} gün satış · Net</div>
+          <div class="year-net ${netCls}">${netSign}${fmt.money(Math.abs(yearTotal.net))}</div>
+          <div class="year-detail">
+            <span>+ <span class="year-income-val">${fmt.money(yearTotal.income)}</span></span>
+            <span>− <span class="year-expense-val">${fmt.money(yearTotal.expense)}</span></span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // === Bu ayın kanal dağılımı ===
+    const thisMonth = months.find(m => m.key === currentMonth);
+    if (thisMonth && thisMonth.income > 0) {
+      const ch = thisMonth.channels;
+      const total = ch.cash + ch.card + ch.getirNet + ch.trendyolNet + ch.kasadan;
+      const channels = [
+        { label: "Nakit", icon: "💵", value: ch.cash, color: "var(--accent-income)" },
+        { label: "Kart", icon: "💳", value: ch.card, color: "var(--accent-today)" },
+        { label: "Kasadan", icon: "🧾", value: ch.kasadan, color: "var(--text-secondary)" },
+        { label: "Getir", icon: "🛵", value: ch.getirNet, color: "#ff8a4d" },
+        { label: "Trendyol", icon: "🚚", value: ch.trendyolNet, color: "#ffa500" }
+      ].filter(c => c.value > 0)
+       .sort((a, b) => b.value - a.value);
+
+      html += `
+        <div class="report-section">
+          <div class="report-section-title">${thisMonth.name} · Kanal Dağılımı</div>
+          <div class="channel-bars">
+      `;
+      channels.forEach(c => {
+        const pct = total > 0 ? (c.value / total * 100) : 0;
+        html += `
+          <div class="channel-bar-row">
+            <span class="channel-bar-icon">${c.icon}</span>
+            <span class="channel-bar-label">${c.label}</span>
+            <div class="channel-bar-track">
+              <div class="channel-bar-fill" style="width: ${pct}%; background: ${c.color};"></div>
+            </div>
+            <span class="channel-bar-amount">${fmt.moneyShort(c.value)} · %${pct.toFixed(0)}</span>
+          </div>
+        `;
+      });
+      html += `</div></div>`;
+    }
+
+    // === Aylık liste ===
+    if (months.length > 0) {
+      const reversed = [...months].reverse();
+      html += `
+        <div class="report-section">
+          <div class="report-section-title">Aylar</div>
+          <div class="month-list">
+      `;
+      reversed.forEach(m => {
+        const cls = m.key === currentMonth ? "current" : "";
+        const netClass = m.net >= 0 ? "positive" : "negative";
+        const netSign = m.net >= 0 ? "" : "−";
+        html += `
+          <div class="month-item ${cls}">
+            <div>
+              <div class="month-name">${m.name}</div>
+              <div class="month-meta">${m.incomeDays}g · +${fmt.moneyShort(m.income)} · −${fmt.moneyShort(m.expense)}</div>
+            </div>
+            <div class="month-net ${netClass}">${netSign}${fmt.money(Math.abs(m.net))}</div>
+          </div>
+        `;
+      });
+      html += `</div></div>`;
+    }
+
+    // === Rekorlar ===
+    if (records.maxDay) {
+      html += `
+        <div class="report-section">
+          <div class="report-section-title">🏆 Rekorlar</div>
+          <div class="record-grid">
+      `;
+      const recs = [
+        { r: records.maxDay, icon: "💰", label: "En Yüksek Satış", val: records.maxDay.total, cls: "" },
+        { r: records.maxCash, icon: "💵", label: "En Yüksek Nakit", val: records.maxCash?.cash, cls: "" },
+        { r: records.maxCard, icon: "💳", label: "En Yüksek Kart", val: records.maxCard?.card, cls: "" },
+        { r: records.maxGetir, icon: "🛵", label: "En Yüksek Getir", val: records.maxGetir?.getirGross, cls: "" },
+        { r: records.maxTrendyol, icon: "🚚", label: "En Yüksek Trendyol", val: records.maxTrendyol?.trendyolGross, cls: "" },
+        { r: records.maxExpense, icon: "💸", label: "En Yüksek Gider", val: records.maxExpense?.total, cls: "expense" }
+      ].filter(x => x.r && x.val > 0);
+
+      recs.forEach(rec => {
+        html += `
+          <div class="record-item ${rec.cls}">
+            <div class="record-icon">${rec.icon}</div>
+            <div class="record-label">${rec.label}</div>
+            <div class="record-value">${fmt.money(rec.val)}</div>
+            <div class="record-date">${fmt.dateKeyToDisplay(rec.r.date)}</div>
+          </div>
+        `;
+      });
+      html += `</div></div>`;
+    }
+
+    this.el.innerHTML = html;
+  }
+};
+
+const More = {
+  el: null,
+  state: {
+    view: "menu"   // 'menu' | 'notes'
+  },
+  activeSub: null,
+
+  start() {
+    this.el = document.getElementById("more-content");
+    this.state.view = "menu";
+    this.render();
+  },
+
+  stop() {
+    if (this.activeSub && this.activeSub.stop) this.activeSub.stop();
+    this.activeSub = null;
+  },
+
+  goTo(view) {
+    if (this.activeSub && this.activeSub.stop) this.activeSub.stop();
+    this.activeSub = null;
+    this.state.view = view;
+    this.render();
+  },
+
+  render() {
+    if (this.state.view === "menu") this.renderMenu();
+    else if (this.state.view === "notes") this.renderNotesPage();
+    else if (this.state.view === "report") this.renderReportPage();
+  },
+
+  renderMenu() {
+    this.el.innerHTML = `
+      <div class="module-header">
+        <h2 style="color: var(--accent-more);">⚙️ Daha</h2>
+        <div class="sub">Diğer modüller</div>
+      </div>
+
+      <div class="more-menu">
+        <div class="more-item" data-view="notes">
+          <span class="more-icon">📝</span>
+          <div class="more-label">
+            <div class="title">Notlar</div>
+            <div class="desc">Hatırlatmalar ve yapılacaklar</div>
+          </div>
+          <span class="more-arrow">›</span>
+        </div>
+        <div class="more-item" data-view="report">
+          <span class="more-icon">📊</span>
+          <div class="more-label">
+            <div class="title">Rapor</div>
+            <div class="desc">Aylık özet, kanal dağılımı, rekorlar</div>
+          </div>
+          <span class="more-arrow">›</span>
+        </div>
+        <div class="more-item disabled">
+          <span class="more-icon">👥</span>
+          <div class="more-label">
+            <div class="title">Çalışanlar <span class="lbl-tag">sonra</span></div>
+            <div class="desc">Kullanıcı yönetimi</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <button id="btn-more-logout" class="btn-secondary">Çıkış yap</button>
+      </div>
+    `;
+
+    this.el.querySelectorAll(".more-item:not(.disabled)").forEach(item => {
+      item.addEventListener("click", () => this.goTo(item.dataset.view));
+    });
+
+    document.getElementById("btn-more-logout").addEventListener("click", () => {
+      if (confirm("Çıkış yapmak istediğine emin misin?")) Auth.logout();
+    });
+  },
+
+  renderNotesPage() {
+    this.el.innerHTML = `
+      <div class="detail-header">
+        <button class="btn-back" id="btn-back-notes" title="Geri">‹</button>
+        <div class="info">
+          <div class="name">📝 Notlar</div>
+          <div class="balance-tag">Hatırlatmalar ve yapılacaklar</div>
+        </div>
+      </div>
+      <div id="notes-content"></div>
+    `;
+    document.getElementById("btn-back-notes").addEventListener("click", () => this.goTo("menu"));
+
+    Notes.start();
+    this.activeSub = Notes;
+  },
+
+  renderReportPage() {
+    this.el.innerHTML = `
+      <div class="detail-header">
+        <button class="btn-back" id="btn-back-report" title="Geri">‹</button>
+        <div class="info">
+          <div class="name">📊 Rapor</div>
+          <div class="balance-tag">Aylık özet ve rekorlar</div>
+        </div>
+      </div>
+      <div id="report-content"></div>
+    `;
+    document.getElementById("btn-back-report").addEventListener("click", () => this.goTo("menu"));
+
+    Report.start();
+    this.activeSub = Report;
+  }
+};
+
+const Modules = {
+  today: Today, income: Income, expense: Expense,
+  supplier: Supplier, more: More
+};
+
+// =====================================================================
+// App (sekme yönetimi, lifecycle)
+// =====================================================================
+const App = {
+  currentTab: "today",
+
+  enterMain() {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("mainApp").classList.add("active");
+    document.getElementById("current-player-name").textContent = State.player.name;
+    document.getElementById("current-player-avatar").textContent = UI.initials(State.player.name);
+    this.attachSettingsListener();
+    this.switchTab("today");
+  },
+
+  attachSettingsListener() {
+    if (State.settingsUnsub) State.settingsUnsub();
+    const ref = doc(db, "broop_app", State.cloudId, "settings", "main");
+    State.settingsUnsub = onSnapshot(ref, (snap) => {
+      if (snap.exists()) {
+        const dec = Crypto.decrypt(snap.data().data, State.key);
+        if (dec) State.settings = dec;
+        else State.settings = {};
+      } else {
+        State.settings = {};
+      }
+      // Aktif tab eğer Sütçü ise yenile
+      if (this.currentTab === "supplier" && Supplier.state.activeTab === "milk" && Supplier.activeSub === Milk) {
+        Milk.render();
+      }
+    }, (err) => {
+      console.error("Settings listener:", err);
+    });
+  },
+
+  switchTab(tab) {
+    if (Modules[this.currentTab]?.stop) Modules[this.currentTab].stop();
+    this.currentTab = tab;
+    document.querySelectorAll(".nav-item").forEach(n => {
+      n.classList.toggle("active", n.dataset.tab === tab);
+    });
+    document.querySelectorAll(".screen").forEach(s => {
+      s.classList.toggle("active", s.id === "screen-" + tab);
+    });
+    Modules[tab]?.start?.();
+  },
+
+  init() {
+    document.querySelectorAll(".nav-item").forEach(n => {
+      n.addEventListener("click", () => this.switchTab(n.dataset.tab));
+    });
+  }
+};
+
+// =====================================================================
+// Login Akış Kontrolü
+// =====================================================================
+let pinBuffer = "";
+let pinMode = "verify"; // 'verify' | 'create'
+let pendingPlayerName = null;
+
+function updatePinDisplay() {
+  document.querySelectorAll("#pin-display .pin-dot").forEach((d, i) => {
+    d.classList.toggle("filled", i < pinBuffer.length);
+  });
+}
+
+// --- Adım 1: Cloud ID + Şifre ---
+document.getElementById("btn-room").addEventListener("click", async () => {
+  const cloudId = document.getElementById("input-cloudId").value.trim().toLowerCase().replace(/\s+/g, "_");
+  const password = document.getElementById("input-password").value;
+
+  if (!cloudId || !password) {
+    UI.showError("login-error", "Cloud ID ve şifre gerekli.");
+    return;
+  }
+  if (cloudId.length < 3) {
+    UI.showError("login-error", "Cloud ID en az 3 karakter olmalı.");
+    return;
+  }
+  if (password.length < 4) {
+    UI.showError("login-error", "Şifre en az 4 karakter olmalı.");
+    return;
+  }
+  if (!firebaseReady) {
+    UI.showError("login-error", "Firebase yapılandırılmamış. Setup adımlarını tamamla.");
+    return;
+  }
+
+  const btn = document.getElementById("btn-room");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+  UI.hideError("login-error");
+
+  try {
+    const res = await Auth.checkRoom(cloudId, password);
+    if (!res.ok) {
+      UI.showError("login-error", res.error);
+      return;
+    }
+
+    if (res.isNew) {
+      UI.success("Yeni dükkân oluşturuldu");
+    }
+
+    await Auth.loadPlayers();
+
+    if (State.players.length === 0) {
+      UI.showStep("step-new-player");
+    } else {
+      renderPlayerList();
+      UI.showStep("step-player");
+    }
+  } catch (e) {
+    console.error(e);
+    UI.showError("login-error", "Hata: " + (e.message || "bağlantı kurulamadı"));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Devam et";
+  }
+});
+
+// --- Adım 2: Çalışan listesi ---
+function renderPlayerList() {
+  const list = document.getElementById("player-list");
+  list.innerHTML = "";
+  State.players.forEach(p => {
+    const item = document.createElement("div");
+    item.className = "player-item";
+    item.innerHTML = `
+      <div class="player-avatar">${UI.initials(p.name)}</div>
+      <div class="player-name">${escapeHtml(p.name)}</div>
+    `;
+    item.addEventListener("click", () => {
+      pendingPlayerName = p.name;
+      pinMode = "verify";
+      pinBuffer = "";
+      updatePinDisplay();
+      UI.hideError("pin-error");
+      document.getElementById("pin-title").textContent = `${p.name} — PIN gir`;
+      UI.showStep("step-pin");
+    });
+    list.appendChild(item);
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+document.getElementById("btn-new-player").addEventListener("click", () => {
+  document.getElementById("input-playerName").value = "";
+  UI.hideError("new-player-error");
+  UI.showStep("step-new-player");
+});
+
+document.getElementById("btn-logout-room").addEventListener("click", () => {
+  Auth.logout();
+});
+
+// --- Adım 2b: Yeni çalışan ---
+document.getElementById("btn-create-player").addEventListener("click", () => {
+  const name = document.getElementById("input-playerName").value.trim();
+  if (!name) {
+    UI.showError("new-player-error", "Ad gerekli");
+    return;
+  }
+  if (name.length > 24) {
+    UI.showError("new-player-error", "Ad çok uzun (max 24 karakter)");
+    return;
+  }
+  if (State.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+    UI.showError("new-player-error", "Bu isim zaten var");
+    return;
+  }
+  UI.hideError("new-player-error");
+
+  pendingPlayerName = name;
+  pinMode = "create";
+  pinBuffer = "";
+  updatePinDisplay();
+  UI.hideError("pin-error");
+  document.getElementById("pin-title").textContent = `${name} — 4 haneli PIN belirle`;
+  UI.showStep("step-pin");
+});
+
+document.getElementById("btn-back-new-player").addEventListener("click", () => {
+  if (State.players.length === 0) {
+    UI.error("İlk kullanıcıyı oluşturmadan ilerleyemezsin");
+    return;
+  }
+  UI.showStep("step-player");
+});
+
+// --- Adım 3: PIN pad ---
+document.querySelectorAll("#step-pin .pin-key").forEach(key => {
+  key.addEventListener("click", async () => {
+    UI.hideError("pin-error");
+
+    if (key.dataset.a === "back") {
+      if (State.players.length === 0) {
+        UI.showStep("step-new-player");
+      } else if (pinMode === "create") {
+        UI.showStep("step-new-player");
+      } else {
+        UI.showStep("step-player");
+      }
+      pinBuffer = "";
+      updatePinDisplay();
+      return;
+    }
+    if (key.dataset.a === "clear") {
+      pinBuffer = pinBuffer.slice(0, -1);
+      updatePinDisplay();
+      return;
+    }
+    if (pinBuffer.length >= 4) return;
+
+    pinBuffer += key.dataset.d;
+    updatePinDisplay();
+
+    if (pinBuffer.length === 4) {
+      const pin = pinBuffer;
+
+      if (pinMode === "create") {
+        try {
+          const newPlayer = await Auth.createPlayer(pendingPlayerName, pin);
+          State.players.push(newPlayer);
+          State.player = newPlayer;
+          App.enterMain();
+          UI.success(`Hoş geldin ${newPlayer.name}!`);
+        } catch (e) {
+          console.error(e);
+          UI.showError("pin-error", "Hata: " + e.message);
+          pinBuffer = "";
+          updatePinDisplay();
+        }
+      } else {
+        const player = State.players.find(p => p.name === pendingPlayerName);
+        if (!player) {
+          UI.showError("pin-error", "Çalışan bulunamadı");
+          pinBuffer = "";
+          updatePinDisplay();
+          return;
+        }
+        if (Auth.verifyPin(player, pin)) {
+          State.player = player;
+          App.enterMain();
+          UI.success(`Hoş geldin ${player.name}!`);
+        } else {
+          UI.showError("pin-error", "PIN yanlış");
+          pinBuffer = "";
+          setTimeout(updatePinDisplay, 80);
+        }
+      }
+    }
+  });
+});
+
+// Klavye desteği PIN için
+document.addEventListener("keydown", (e) => {
+  const pinStep = document.getElementById("step-pin");
+  if (!pinStep.classList.contains("active")) return;
+  if (e.key >= "0" && e.key <= "9") {
+    const k = document.querySelector(`.pin-key[data-d="${e.key}"]`);
+    k?.click();
+  } else if (e.key === "Backspace") {
+    document.querySelector('.pin-key[data-a="clear"]')?.click();
+  }
+});
+
+// Enter ile devam et
+document.getElementById("input-password").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") document.getElementById("btn-room").click();
+});
+document.getElementById("input-playerName").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") document.getElementById("btn-create-player").click();
+});
+
+// =====================================================================
+// Başlat
+// =====================================================================
+App.init();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(err => {
+      console.log("SW kaydı atlandı:", err.message);
+    });
+  });
+}
+</script>
+</body>
+</html>
