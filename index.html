@@ -65,6 +65,45 @@ body { min-height: 100vh; min-height: 100dvh; }
   min-height: 100vh; min-height: 100dvh;
 }
 
+/* ==================== Update Banner ==================== */
+.update-banner {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-200%);
+  background: var(--accent-today);
+  color: var(--bg-deep);
+  padding: 10px 14px 10px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);
+  z-index: 9999;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-width: 92vw;
+  white-space: nowrap;
+}
+.update-banner.show {
+  transform: translateX(-50%) translateY(0);
+}
+.update-banner .reload-btn {
+  background: var(--bg-deep);
+  color: var(--accent-today);
+  border: none;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+.update-banner .reload-btn:active { opacity: 0.7; }
+.update-banner .reload-btn:disabled { opacity: 0.5; cursor: wait; }
+
 /* ==================== Login Ekranı ==================== */
 .login-screen {
   padding: 24px 20px;
@@ -1796,6 +1835,12 @@ body { min-height: 100vh; min-height: 100dvh; }
 </style>
 </head>
 <body>
+
+<!-- Update banner: yeni SW sürümü hazır olduğunda görünür -->
+<div id="update-banner" class="update-banner">
+  <span>🔄 Yeni sürüm hazır</span>
+  <button class="reload-btn">Yenile</button>
+</div>
 <div id="app">
 
   <!-- ========== LOGIN ========== -->
@@ -1932,12 +1977,12 @@ body { min-height: 100vh; min-height: 100dvh; }
     </nav>
   </div>
 
-  <div class="version-tag">v0.7.1</div>
+  <div class="version-tag">v0.7.2</div>
 </div>
 
 <script type="module">
 // =====================================================================
-// Orçun Dondurma — v0.7.1
+// Orçun Dondurma — v0.7.2
 // =====================================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
@@ -5763,9 +5808,55 @@ App.init();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(err => {
+    navigator.serviceWorker.register("./sw.js").then(reg => {
+      // 30 dakikada bir update kontrolü (uygulama açıkken)
+      setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000);
+
+      // Sayfa açıldığında: zaten waiting bir SW varsa banner göster
+      if (reg.waiting && navigator.serviceWorker.controller) {
+        showUpdateBanner(reg.waiting);
+      }
+
+      // Yeni SW indirilirken
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+
+        newWorker.addEventListener("statechange", () => {
+          // Yeni SW kuruldu, eski hala kontrol ediyor → "waiting" durumu
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            showUpdateBanner(newWorker);
+          }
+        });
+      });
+    }).catch(err => {
       console.log("SW kaydı atlandı:", err.message);
     });
+
+    // SW değiştiğinde (skipWaiting sonrası) sayfayı yenile
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+  });
+}
+
+function showUpdateBanner(waitingWorker) {
+  const banner = document.getElementById("update-banner");
+  if (!banner) return;
+  banner.classList.add("show");
+
+  const btn = banner.querySelector(".reload-btn");
+  // Eski listener varsa temizle
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+
+  newBtn.addEventListener("click", () => {
+    newBtn.textContent = "...";
+    newBtn.disabled = true;
+    waitingWorker.postMessage({ type: "SKIP_WAITING" });
   });
 }
 </script>
