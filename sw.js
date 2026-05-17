@@ -1,5 +1,5 @@
-// Orçun Dondurma — Service Worker v0.7.5
-const VERSION = "v0.7.5";
+// Orçun Dondurma — Service Worker v0.7.6
+const VERSION = "v0.7.6";
 const CACHE = "orcun-" + VERSION;
 
 const ASSETS = [

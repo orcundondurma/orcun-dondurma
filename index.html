@@ -53,10 +53,18 @@ html, body {
   font-size: 15px;
   line-height: 1.5;
   overflow-x: hidden;
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: contain;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
-body { min-height: 100vh; min-height: 100dvh; }
+body {
+  min-height: 100vh; min-height: 100dvh;
+  /* MIUI ve eski Android için yumuşak scroll */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  /* Yatay scroll'u tamamen engelle ama dikeyi serbest bırak */
+  overflow-x: hidden;
+}
 
 #app {
   max-width: 960px;
@@ -285,6 +293,9 @@ body { min-height: 100vh; min-height: 100dvh; }
 .app-content {
   flex: 1;
   padding: 16px 16px calc(88px + env(safe-area-inset-bottom));
+  /* Xiaomi/MIUI'de scroll sorunu olmasın diye */
+  -webkit-overflow-scrolling: touch;
+  overflow-anchor: none;
 }
 
 .screen { display: none; }
@@ -2035,12 +2046,12 @@ body { min-height: 100vh; min-height: 100dvh; }
     </nav>
   </div>
 
-  <div class="version-tag">v0.7.5</div>
+  <div class="version-tag">v0.7.6</div>
 </div>
 
 <script type="module">
 // =====================================================================
-// Orçun Dondurma — v0.7.5
+// Orçun Dondurma — v0.7.6
 // =====================================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
@@ -5607,7 +5618,7 @@ const More = {
         <button id="btn-check-update" class="btn-secondary">🔄 Güncellemeleri kontrol et</button>
         <button id="btn-more-logout" class="btn-secondary">Çıkış yap</button>
         <div style="text-align: center; font-size: 11px; color: var(--text-tertiary); margin-top: 8px; font-family: 'Manrope', sans-serif;">
-          Orçun Dondurma · v0.7.5
+          Orçun Dondurma · v0.7.6
         </div>
       </div>
     `;
