@@ -2035,12 +2035,12 @@ body { min-height: 100vh; min-height: 100dvh; }
     </nav>
   </div>
 
-  <div class="version-tag">v0.7.4</div>
+  <div class="version-tag">v0.7.5</div>
 </div>
 
 <script type="module">
 // =====================================================================
-// Orçun Dondurma — v0.7.4
+// Orçun Dondurma — v0.7.5
 // =====================================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
@@ -5603,13 +5603,21 @@ const More = {
         </div>
       </div>
 
-      <div style="margin-top: 24px;">
+      <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 8px;">
+        <button id="btn-check-update" class="btn-secondary">🔄 Güncellemeleri kontrol et</button>
         <button id="btn-more-logout" class="btn-secondary">Çıkış yap</button>
+        <div style="text-align: center; font-size: 11px; color: var(--text-tertiary); margin-top: 8px; font-family: 'Manrope', sans-serif;">
+          Orçun Dondurma · v0.7.5
+        </div>
       </div>
     `;
 
     this.el.querySelectorAll(".more-item:not(.disabled)").forEach(item => {
       item.addEventListener("click", () => this.goTo(item.dataset.view));
+    });
+
+    document.getElementById("btn-check-update").addEventListener("click", () => {
+      forceUpdate();
     });
 
     document.getElementById("btn-more-logout").addEventListener("click", () => {
@@ -6004,6 +6012,31 @@ function showUpdateBanner(waitingWorker) {
     newBtn.disabled = true;
     waitingWorker.postMessage({ type: "SKIP_WAITING" });
   });
+}
+
+// Manuel olarak Daha menüsünden çağrılan zorla güncelleme
+async function forceUpdate() {
+  if (!confirm("Uygulamanın en yeni sürümünü indirmek için bir kez yenilenecek. Devam?")) return;
+
+  try {
+    // Tüm cache'leri temizle
+    if (typeof caches !== "undefined") {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+
+    // Service worker'ı kayıttan çıkar
+    if ("serviceWorker" in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) await reg.unregister();
+    }
+
+    // Hard reload
+    window.location.reload();
+  } catch (e) {
+    console.error("Force update hatası:", e);
+    window.location.reload();
+  }
 }
 </script>
 </body>
