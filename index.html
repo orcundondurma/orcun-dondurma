@@ -13,7 +13,7 @@
 <link rel="icon" href="./icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 <style>
 :root {
@@ -401,7 +401,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   border-radius: var(--radius-sm);
   padding: 14px 14px 14px 32px;
   color: var(--text-primary);
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-size: 17px;
   font-weight: 500;
   outline: none;
@@ -440,7 +442,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   letter-spacing: 0.5px;
 }
 .net-display .net-amount {
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-size: 14px;
   font-weight: 600;
   color: var(--accent-income);
@@ -496,7 +500,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   letter-spacing: 0.5px;
 }
 .total-bar .total-value {
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-size: 22px;
   font-weight: 600;
   color: var(--accent-income);
@@ -598,7 +604,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   flex-wrap: wrap;
   font-size: 11px;
   color: var(--text-tertiary);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 .entry-side {
   display: flex;
@@ -606,7 +614,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   gap: 8px;
 }
 .entry-total {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-size: 14px;
   font-weight: 600;
   color: var(--accent-income);
@@ -688,7 +698,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   letter-spacing: 1px;
 }
 .year-summary .year-net {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-size: 32px;
   font-weight: 700;
   color: var(--accent-income);
@@ -705,7 +717,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   border-top: 1px solid var(--border);
 }
 .year-summary .year-detail span {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 .year-summary .year-income-val { color: var(--accent-income); }
 .year-summary .year-expense-val { color: var(--accent-expense); }
@@ -737,10 +751,14 @@ body { min-height: 100vh; min-height: 100dvh; }
   font-size: 11px;
   color: var(--text-tertiary);
   margin-top: 2px;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 .month-item .month-net {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-weight: 600;
   font-size: 14px;
   text-align: right;
@@ -785,7 +803,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   transition: width 0.3s;
 }
 .channel-bar-amount {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   text-align: right;
   color: var(--text-secondary);
   font-size: 11px;
@@ -816,7 +836,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   margin-bottom: 4px;
 }
 .record-item .record-value {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-weight: 700;
   font-size: 15px;
   color: var(--accent-today);
@@ -824,7 +846,9 @@ body { min-height: 100vh; min-height: 100dvh; }
 .record-item .record-date {
   font-size: 10px;
   color: var(--text-tertiary);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   margin-top: 4px;
 }
 .record-item.expense .record-value { color: var(--accent-expense); }
@@ -878,7 +902,9 @@ body { min-height: 100vh; min-height: 100dvh; }
 .note-item .note-date {
   font-size: 10px;
   color: var(--text-tertiary);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1040,7 +1066,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   gap: 16px;
 }
 .milk-stat-card .stat-big {
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-size: 26px;
   font-weight: 600;
   color: var(--text-primary);
@@ -1057,7 +1085,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   font-size: 11px;
   color: var(--text-tertiary);
   margin-top: 2px;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .entry-item.milk .entry-total { color: var(--accent-supplier); }
@@ -1090,7 +1120,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   font-weight: 500;
 }
 .debt-summary .amount {
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-size: 30px;
   font-weight: 700;
   color: var(--accent-supplier);
@@ -1160,7 +1192,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   margin-top: 2px;
 }
 .supplier-item .sup-balance {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-weight: 600;
   font-size: 14px;
   text-align: right;
@@ -1249,7 +1283,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   white-space: nowrap;
 }
 .tx-item .tx-amount {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-weight: 600;
   font-size: 14px;
   text-align: right;
@@ -1368,7 +1404,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   border-radius: var(--radius-sm);
   padding: 9px 10px 9px 22px;
   color: var(--text-primary);
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-size: 14px;
   font-weight: 500;
   outline: none;
@@ -1408,7 +1446,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   letter-spacing: 0.5px;
 }
 .expense-total-bar .total-value {
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-size: 22px;
   font-weight: 600;
   color: var(--accent-expense);
@@ -1464,7 +1504,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   font-weight: 500;
 }
 .today-hero .amount {
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-size: 36px;
   font-weight: 700;
   color: var(--accent-today);
@@ -1529,7 +1571,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   letter-spacing: 0.5px;
 }
 .channel-card .ch-value {
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
@@ -1557,7 +1601,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   color: var(--text-secondary);
 }
 .cashout-row .value {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-size: 14px;
   font-weight: 600;
   color: var(--warning);
@@ -1588,7 +1634,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   gap: 12px;
 }
 .stat-main {
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   font-size: 22px;
   font-weight: 600;
   color: var(--text-primary);
@@ -1596,7 +1644,9 @@ body { min-height: 100vh; min-height: 100dvh; }
 .stat-sub {
   font-size: 11px;
   color: var(--text-tertiary);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .mini-chart {
@@ -1617,7 +1667,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   justify-content: space-between;
 }
 .mini-chart-title .max {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   color: var(--text-secondary);
   text-transform: none;
   letter-spacing: 0;
@@ -1657,7 +1709,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   text-align: center;
   font-size: 9px;
   color: var(--text-tertiary);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 .modal-backdrop {
   position: fixed;
@@ -1737,7 +1791,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   font-size: 12px;
   color: var(--text-secondary);
   text-align: center;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 /* ==================== Alt Menü ==================== */
@@ -1827,7 +1883,9 @@ body { min-height: 100vh; min-height: 100dvh; }
   padding: 2px 6px;
   border-radius: 4px;
   border: 1px solid var(--border);
-  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   z-index: 5;
   opacity: 0.5;
   pointer-events: none;
@@ -1977,12 +2035,12 @@ body { min-height: 100vh; min-height: 100dvh; }
     </nav>
   </div>
 
-  <div class="version-tag">v0.7.2</div>
+  <div class="version-tag">v0.7.3</div>
 </div>
 
 <script type="module">
 // =====================================================================
-// Orçun Dondurma — v0.7.2
+// Orçun Dondurma — v0.7.3
 // =====================================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
@@ -2046,6 +2104,41 @@ const Crypto = {
   },
   randomSalt() {
     return CryptoJS.lib.WordArray.random(16).toString();
+  }
+};
+
+// =====================================================================
+// Session — otomatik giriş için localStorage
+// =====================================================================
+const Session = {
+  KEY: "orcun-session",
+
+  save() {
+    if (!State.cloudId || !State.key || !State.player) return;
+    try {
+      localStorage.setItem(this.KEY, JSON.stringify({
+        cloudId: State.cloudId,
+        key: State.key,
+        playerName: State.player.name,
+        savedAt: Date.now()
+      }));
+    } catch (e) {
+      console.error("Session save:", e);
+    }
+  },
+
+  load() {
+    try {
+      const raw = localStorage.getItem(this.KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) {
+      return null;
+    }
+  },
+
+  clear() {
+    try { localStorage.removeItem(this.KEY); } catch (e) {}
   }
 };
 
@@ -2248,8 +2341,48 @@ const Auth = {
     return Crypto.hashPin(pin, player.pinSalt) === player.pinHash;
   },
 
+  async tryAutoLogin() {
+    const s = Session.load();
+    if (!s || !s.cloudId || !s.key || !s.playerName) return false;
+
+    try {
+      // Room doc'u getir, key ile checkPhrase decrypt et
+      const roomRef = doc(db, "broop_app", s.cloudId);
+      const snap = await getDoc(roomRef);
+      if (!snap.exists()) {
+        Session.clear();
+        return false;
+      }
+
+      const test = Crypto.decrypt(snap.data().checkPhrase, s.key);
+      if (!test || !test.ok) {
+        Session.clear();
+        return false;
+      }
+
+      // Doğru, state'i kur
+      State.cloudId = s.cloudId;
+      State.key = s.key;
+
+      // Player'ı yükle
+      await this.loadPlayers();
+      const player = State.players.find(p => p.name === s.playerName);
+      if (!player) {
+        Session.clear();
+        return false;
+      }
+      State.player = player;
+      return true;
+    } catch (e) {
+      console.error("Auto-login hatası:", e);
+      Session.clear();
+      return false;
+    }
+  },
+
   logout() {
     if (State.settingsUnsub) { State.settingsUnsub(); State.settingsUnsub = null; }
+    Session.clear();
     State.cloudId = null;
     State.key = null;
     State.player = null;
@@ -2512,7 +2645,9 @@ const Today = {
           </div>
           <div style="display: flex; justify-content: space-between; padding-top: 6px; border-top: 1px solid var(--border);">
             <span style="font-size: 12px; font-weight: 500;">Net</span>
-            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-weight: 600; color: ${weekNet >= 0 ? 'var(--accent-income)' : 'var(--danger)'};">
+            <span style="font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum"; font-weight: 600; color: ${weekNet >= 0 ? 'var(--accent-income)' : 'var(--danger)'};">
               ${weekNet >= 0 ? '' : '−'}${fmt.money(Math.abs(weekNet))}
             </span>
           </div>
@@ -2540,7 +2675,9 @@ const Today = {
           </div>
           <div style="display: flex; justify-content: space-between; padding-top: 6px; border-top: 1px solid var(--border);">
             <span style="font-size: 12px; font-weight: 500;">Net</span>
-            <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-weight: 600; color: ${monthNet >= 0 ? 'var(--accent-income)' : 'var(--danger)'};">
+            <span style="font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum"; font-weight: 600; color: ${monthNet >= 0 ? 'var(--accent-income)' : 'var(--danger)'};">
               ${monthNet >= 0 ? '' : '−'}${fmt.money(Math.abs(monthNet))}
             </span>
           </div>
@@ -5527,6 +5664,7 @@ const App = {
   currentTab: "today",
 
   enterMain() {
+    Session.save();
     document.getElementById("loginScreen").style.display = "none";
     document.getElementById("mainApp").classList.add("active");
     document.getElementById("current-player-name").textContent = State.player.name;
@@ -5805,6 +5943,14 @@ document.getElementById("input-playerName").addEventListener("keydown", (e) => {
 // Başlat
 // =====================================================================
 App.init();
+
+// Önceki oturumu otomatik aç (varsa)
+(async () => {
+  const ok = await Auth.tryAutoLogin();
+  if (ok) {
+    App.enterMain();
+  }
+})();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
