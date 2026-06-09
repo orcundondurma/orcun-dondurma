@@ -864,6 +864,128 @@ body {
 }
 .record-item.expense .record-value { color: var(--accent-expense); }
 .record-item.supplier .record-value { color: var(--accent-supplier); }
+
+/* ==================== Genel İşlem Listesi (Ev, Borç, Döviz, Araç) ==================== */
+.gc-summary {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  margin-bottom: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.gc-summary::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  opacity: 0.5;
+  background: linear-gradient(90deg, var(--accent-more), transparent);
+}
+.gc-summary .gc-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.gc-summary .gc-big {
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+}
+.gc-summary .gc-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+.gc-summary.green .gc-big { color: var(--accent-income); }
+.gc-summary.red .gc-big { color: var(--danger); }
+.gc-summary.amber .gc-big { color: var(--accent-supplier); }
+
+.gc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gc-item {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+  display: grid;
+  grid-template-columns: 26px 1fr auto 26px;
+  gap: 10px;
+  align-items: center;
+}
+.gc-item.clickable { cursor: pointer; }
+.gc-item.clickable:active { border-color: var(--border-strong); }
+.gc-item .gc-icon { font-size: 17px; text-align: center; }
+.gc-item .gc-main { min-width: 0; }
+.gc-item .gc-title { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.gc-item .gc-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gc-item .gc-amount {
+  font-family: 'Manrope', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-weight: 600;
+  font-size: 14px;
+  text-align: right;
+  white-space: nowrap;
+}
+.gc-item .gc-amount.pos { color: var(--accent-income); }
+.gc-item .gc-amount.neg { color: var(--danger); }
+.gc-item .gc-amount.amber { color: var(--accent-supplier); }
+
+/* Seçici çipler (araç, döviz tipi) */
+.chip-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.chip {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.chip.active {
+  background: var(--accent-more);
+  color: var(--bg-deep);
+  border-color: var(--accent-more);
+}
+
+/* Döviz kâr/zarar rozeti */
+.pl-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+.pl-badge.profit { background: rgba(95,212,163,0.15); color: var(--accent-income); }
+.pl-badge.loss { background: rgba(255,107,107,0.15); color: var(--danger); }
+
 .note-list {
   display: flex;
   flex-direction: column;
@@ -2046,12 +2168,12 @@ body {
     </nav>
   </div>
 
-  <div class="version-tag">v0.7.6</div>
+  <div class="version-tag">v0.8.0</div>
 </div>
 
 <script type="module">
 // =====================================================================
-// Orçun Dondurma — v0.7.6
+// Orçun Dondurma — v0.8.0
 // =====================================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
@@ -2202,7 +2324,21 @@ const fmt = {
       String(d.getMonth() + 1).padStart(2, "0") + "-" +
       String(d.getDate()).padStart(2, "0");
   },
+  // İşletme günü: gece 03:00'a kadar önceki güne sayılır.
+  // Dükkan gece 02:00'de kapanıp satış geç yazıldığı için.
+  BUSINESS_DAY_CUTOFF_HOUR: 3,
+  businessNow() {
+    const d = new Date();
+    if (d.getHours() < this.BUSINESS_DAY_CUTOFF_HOUR) {
+      d.setDate(d.getDate() - 1);
+    }
+    return d;
+  },
   todayKey() {
+    return this.dateKey(this.businessNow());
+  },
+  // Gerçek takvim günü (raporlarda "şu an hangi ay" için bazen lazım)
+  calendarTodayKey() {
     return this.dateKey(new Date());
   },
   dateKeyToDisplay(key) {
@@ -2515,8 +2651,8 @@ const Today = {
     const today = this.state.entries.find(e => e.date === todayKey);
     const todayExp = this.state.expenseEntries.find(e => e.date === todayKey);
 
-    const weekStart = fmt.mondayOfWeek(new Date());
-    const monthStart = fmt.firstOfMonth(new Date());
+    const weekStart = fmt.mondayOfWeek(fmt.businessNow());
+    const monthStart = fmt.firstOfMonth(fmt.businessNow());
 
     const weekIncome = this.state.entries.filter(e => e.date >= weekStart && e.date <= todayKey);
     const weekExp = this.state.expenseEntries.filter(e => e.date >= weekStart && e.date <= todayKey);
@@ -2739,7 +2875,7 @@ const Today = {
   },
 
   renderMiniChart() {
-    const today = new Date();
+    const today = fmt.businessNow();
     const days = [];
     for (let i = 13; i >= 0; i--) {
       const d = new Date(today);
@@ -3403,6 +3539,10 @@ const EXPENSE_CATS = [
   { id: "genelIhtiyac", label: "Genel İhtiyaç",     icon: "🧰" },
   { id: "orcun",        label: "Orçun (kişisel)",   icon: "👤" },
   { id: "elektrikSu",   label: "Elektrik-Su",       icon: "💡" },
+  { id: "bagkur",       label: "Bağkur",            icon: "🏛️" },
+  { id: "vergi",        label: "Vergi",             icon: "🧾" },
+  { id: "yapilandirma", label: "Yapılandırma",      icon: "📋" },
+  { id: "algidaSenet",  label: "Algida Senet",      icon: "🍦" },
   { id: "diger",        label: "Diğer",             icon: "📌" }
 ];
 
@@ -5550,6 +5690,671 @@ const Report = {
   }
 };
 
+// =====================================================================
+// EV / İNŞAAT — basit harcama defteri (tarih + tutar + açıklama)
+// =====================================================================
+const House = {
+  el: null,
+  state: { entries: [], unsub: null },
+
+  start() {
+    this.el = document.getElementById("house-content");
+    this.render();
+    this.attach();
+  },
+  stop() {
+    if (this.state.unsub) { this.state.unsub(); this.state.unsub = null; }
+  },
+  attach() {
+    if (this.state.unsub) this.state.unsub();
+    const ref = collection(db, "broop_app", State.cloudId, "house");
+    this.state.unsub = onSnapshot(ref, (snap) => {
+      const list = [];
+      snap.forEach(d => {
+        const dec = Crypto.decrypt(d.data().data, State.key);
+        if (dec) list.push({ id: d.id, ...dec });
+      });
+      list.sort((a, b) => b.date.localeCompare(a.date));
+      this.state.entries = list;
+      this.render();
+    }, (err) => console.error("House listener:", err));
+  },
+  render() {
+    if (!this.el) return;
+    const total = this.state.entries.reduce((s, e) => s + (e.amount || 0), 0);
+    let html = `
+      <div class="gc-summary amber">
+        <div class="gc-label">Toplam Harcama · ${this.state.entries.length} kayıt</div>
+        <div class="gc-big">${fmt.money(total)}</div>
+        <div class="gc-sub">Eve şimdiye kadar harcanan</div>
+      </div>
+      <div class="supplier-actions" style="grid-template-columns: 1fr;">
+        <button id="house-add" class="primary">+ Harcama Ekle</button>
+      </div>
+    `;
+    if (this.state.entries.length === 0) {
+      html += `<div class="empty-list"><p>Henüz harcama yok.</p></div>`;
+    } else {
+      html += `<div class="list-header"><span>Harcamalar</span></div><div class="gc-list">`;
+      this.state.entries.forEach(e => {
+        html += `
+          <div class="gc-item clickable" data-id="${e.id}">
+            <span class="gc-icon">🧱</span>
+            <div class="gc-main">
+              <div class="gc-title">${fmt.dateKeyToDisplay(e.date)}</div>
+              ${e.desc ? `<div class="gc-meta">${escapeHtml(e.desc)}</div>` : ""}
+            </div>
+            <div class="gc-amount amber">${fmt.money(e.amount)}</div>
+            <button class="btn-delete" data-del="${e.id}">×</button>
+          </div>`;
+      });
+      html += `</div>`;
+    }
+    this.el.innerHTML = html;
+    document.getElementById("house-add").addEventListener("click", () => this.dialog(null));
+    this.el.querySelectorAll(".gc-item.clickable").forEach(it => {
+      it.addEventListener("click", (ev) => {
+        if (ev.target.closest(".btn-delete")) return;
+        const e = this.state.entries.find(x => x.id === it.dataset.id);
+        if (e) this.dialog(e);
+      });
+    });
+    this.el.querySelectorAll("[data-del]").forEach(b => {
+      b.addEventListener("click", (ev) => { ev.stopPropagation(); this.del(b.dataset.del); });
+    });
+  },
+  dialog(existing) {
+    const m = document.createElement("div");
+    m.className = "modal-backdrop";
+    m.innerHTML = `
+      <div class="modal">
+        <h3>${existing ? "Harcama Düzenle" : "Yeni Harcama"}</h3>
+        <div class="form-field"><label>Tarih</label>
+          <input type="date" id="h-date" class="field-input" value="${existing ? existing.date : fmt.todayKey()}" /></div>
+        <div class="form-field"><label>Tutar</label>
+          <div class="input-money"><span class="prefix">₺</span>
+          <input type="text" inputmode="decimal" id="h-amount" placeholder="0" value="${existing ? existing.amount : ''}" /></div></div>
+        <div class="form-field"><label>Açıklama <span class="lbl-tag">opsiyonel</span></label>
+          <textarea id="h-desc" rows="2" placeholder="örn. çimento, işçilik">${existing ? escapeHtml(existing.desc || "") : ""}</textarea></div>
+        <div id="h-err" class="error-msg" style="display:none;"></div>
+        <div class="modal-actions">
+          <button id="h-cancel" class="btn-secondary">İptal</button>
+          ${existing ? '<button id="h-del" class="btn-secondary" style="color:var(--danger);">Sil</button>' : ''}
+          <button id="h-save" class="btn-primary">${existing ? "Güncelle" : "Kaydet"}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(m);
+    document.getElementById("h-cancel").addEventListener("click", () => m.remove());
+    if (existing) document.getElementById("h-del").addEventListener("click", () => { m.remove(); this.del(existing.id); });
+    document.getElementById("h-save").addEventListener("click", async () => {
+      const date = document.getElementById("h-date").value;
+      const amount = fmt.parseNum(document.getElementById("h-amount").value);
+      const desc = document.getElementById("h-desc").value.trim();
+      if (!date) { UI.showError("h-err", "Tarih gerekli"); return; }
+      if (amount <= 0) { UI.showError("h-err", "Tutar gerekli"); return; }
+      try {
+        const now = Date.now();
+        const id = existing?.id || randomId("house");
+        const data = {
+          date, amount, desc,
+          createdBy: existing ? existing.createdBy : State.player.name,
+          createdAt: existing ? existing.createdAt : now,
+          lastEditedBy: State.player.name, updatedAt: now
+        };
+        await setDoc(doc(db, "broop_app", State.cloudId, "house", id),
+          { data: Crypto.encrypt(data, State.key), date, updatedAt: now });
+        m.remove();
+        UI.success(existing ? "Güncellendi ✓" : "Eklendi ✓");
+      } catch (e) { UI.showError("h-err", "Hata: " + e.message); }
+    });
+  },
+  async del(id) {
+    const e = this.state.entries.find(x => x.id === id);
+    if (!e) return;
+    if (!confirm(`${fmt.dateKeyToDisplay(e.date)} · ${fmt.money(e.amount)} harcamasını sil? Geri alınamaz.`)) return;
+    try { await deleteDoc(doc(db, "broop_app", State.cloudId, "house", id)); UI.success("Silindi"); }
+    catch (e) { UI.error("Silinemedi: " + e.message); }
+  }
+};
+
+// =====================================================================
+// BORÇ DEFTERİ — kişi bazlı (Toptancı mantığı)
+//   give = borç verdim (alacak +), take = borç aldım (borç -)
+//   collect = geri aldım, repay = geri ödedim
+//   Bakiye + = bana borçlular toplamı, - = benim borçlarım
+// =====================================================================
+const Debt = {
+  el: null,
+  state: {
+    view: "list", selectedId: null,
+    people: [], tx: [],
+    unsubP: null, unsubT: null
+  },
+  start() {
+    this.el = document.getElementById("debt-content");
+    this.render();
+    this.attach();
+  },
+  stop() {
+    if (this.state.unsubP) { this.state.unsubP(); this.state.unsubP = null; }
+    if (this.state.unsubT) { this.state.unsubT(); this.state.unsubT = null; }
+  },
+  attach() {
+    if (this.state.unsubP) this.state.unsubP();
+    if (this.state.unsubT) this.state.unsubT();
+    this.state.unsubP = onSnapshot(collection(db, "broop_app", State.cloudId, "debtPeople"), (snap) => {
+      const list = [];
+      snap.forEach(d => { const dec = Crypto.decrypt(d.data().data, State.key); if (dec) list.push({ id: d.id, ...dec }); });
+      list.sort((a, b) => a.name.localeCompare(b.name, "tr"));
+      this.state.people = list; this.render();
+    }, (e) => console.error("Debt people:", e));
+    this.state.unsubT = onSnapshot(collection(db, "broop_app", State.cloudId, "debtTx"), (snap) => {
+      const list = [];
+      snap.forEach(d => { const dec = Crypto.decrypt(d.data().data, State.key); if (dec) list.push({ id: d.id, ...dec }); });
+      list.sort((a, b) => b.date.localeCompare(a.date));
+      this.state.tx = list; this.render();
+    }, (e) => console.error("Debt tx:", e));
+  },
+  // + => bana borçlu (ben verdim/onlar ödemedi), - => ben borçluyum
+  balance(pid) {
+    return this.state.tx.filter(t => t.personId === pid).reduce((b, t) => {
+      if (t.type === "give") return b + t.amount;       // borç verdim → alacağım arttı
+      if (t.type === "collect") return b - t.amount;     // geri aldım → alacağım azaldı
+      if (t.type === "take") return b - t.amount;        // borç aldım → borcum arttı
+      if (t.type === "repay") return b + t.amount;       // geri ödedim → borcum azaldı
+      return b;
+    }, 0);
+  },
+  render() {
+    if (!this.el) return;
+    if (this.state.view === "detail") return this.renderDetail();
+    this.renderList();
+  },
+  renderList() {
+    const ppl = this.state.people;
+    let totalOwed = 0, totalOwe = 0;
+    ppl.forEach(p => { const b = this.balance(p.id); if (b > 0) totalOwed += b; else totalOwe += -b; });
+    let html = `
+      <div class="gc-summary ${totalOwed - totalOwe >= 0 ? 'green' : 'red'}">
+        <div class="gc-label">Net Durum</div>
+        <div class="gc-big">${totalOwed - totalOwe >= 0 ? '' : '−'}${fmt.money(Math.abs(totalOwed - totalOwe))}</div>
+        <div class="gc-sub">Alacak ${fmt.moneyShort(totalOwed)} · Borç ${fmt.moneyShort(totalOwe)}</div>
+      </div>
+      <div class="supplier-actions"><button id="debt-newp" class="">+ Yeni Kişi</button>
+      <button id="debt-newt" class="primary">+ Yeni İşlem</button></div>
+    `;
+    if (ppl.length === 0) {
+      html += `<div class="empty-list"><p>Henüz kişi yok.</p>
+        <button id="debt-newp2" class="btn-secondary" style="max-width:240px;margin:8px auto;">+ Yeni Kişi</button></div>`;
+    } else {
+      html += `<div class="list-header"><span>Kişiler (${ppl.length})</span></div><div class="gc-list">`;
+      ppl.forEach(p => {
+        const b = this.balance(p.id);
+        let cls = "", txt = "✓ kapalı";
+        if (b > 0.01) { cls = "pos"; txt = fmt.money(b) + " alacak"; }
+        else if (b < -0.01) { cls = "neg"; txt = fmt.money(-b) + " borç"; }
+        const cnt = this.state.tx.filter(t => t.personId === p.id).length;
+        html += `
+          <div class="gc-item clickable" data-id="${p.id}">
+            <span class="gc-icon">🤝</span>
+            <div class="gc-main"><div class="gc-title">${escapeHtml(p.name)}</div>
+              <div class="gc-meta">${cnt} işlem</div></div>
+            <div class="gc-amount ${cls}">${txt}</div>
+            <span></span>
+          </div>`;
+      });
+      html += `</div>`;
+    }
+    this.el.innerHTML = html;
+    const np = document.getElementById("debt-newp"); if (np) np.addEventListener("click", () => this.addPerson());
+    const np2 = document.getElementById("debt-newp2"); if (np2) np2.addEventListener("click", () => this.addPerson());
+    const nt = document.getElementById("debt-newt"); if (nt) nt.addEventListener("click", () => this.addTx(null));
+    this.el.querySelectorAll(".gc-item.clickable").forEach(it => {
+      it.addEventListener("click", () => { this.state.selectedId = it.dataset.id; this.state.view = "detail"; this.render(); });
+    });
+  },
+  renderDetail() {
+    const p = this.state.people.find(x => x.id === this.state.selectedId);
+    if (!p) { this.state.view = "list"; this.render(); return; }
+    const b = this.balance(p.id);
+    const txs = this.state.tx.filter(t => t.personId === p.id);
+    let tag = "Bakiye: ₺0 · ✓ kapalı", tagCls = "";
+    if (b > 0.01) { tag = `${fmt.money(b)} alacak`; tagCls = "pos"; }
+    else if (b < -0.01) { tag = `${fmt.money(-b)} borç`; tagCls = "neg"; }
+    let html = `
+      <div class="detail-header">
+        <button class="btn-back" id="debt-back">‹</button>
+        <div class="info"><div class="name">${escapeHtml(p.name)}</div>
+          <div class="balance-tag ${tagCls === 'pos' ? 'zero' : (tagCls === 'neg' ? 'debt' : 'zero')}">${tag}</div></div>
+        <button class="btn-mini" id="debt-delp" style="color:var(--danger);">Sil</button>
+      </div>
+      <div class="supplier-actions" style="grid-template-columns:1fr;">
+        <button id="debt-addt" class="primary">+ İşlem Ekle</button></div>
+    `;
+    if (txs.length === 0) html += `<div class="empty-list"><p>Henüz işlem yok.</p></div>`;
+    else {
+      html += `<div class="list-header"><span>İşlemler (${txs.length})</span></div><div class="gc-list">`;
+      const labels = { give: "Borç verdim", collect: "Geri aldım", take: "Borç aldım", repay: "Geri ödedim" };
+      const icons = { give: "📤", collect: "📥", take: "📥", repay: "📤" };
+      txs.forEach(t => {
+        const positive = (t.type === "give" || t.type === "repay");
+        html += `
+          <div class="gc-item">
+            <span class="gc-icon">${icons[t.type]}</span>
+            <div class="gc-main"><div class="gc-title">${fmt.dateKeyToDisplay(t.date)} · ${labels[t.type]}</div>
+              ${t.note ? `<div class="gc-meta">${escapeHtml(t.note)}</div>` : ""}</div>
+            <div class="gc-amount ${positive ? 'pos' : 'neg'}">${fmt.money(t.amount)}</div>
+            <button class="btn-delete" data-del="${t.id}">×</button>
+          </div>`;
+      });
+      html += `</div>`;
+    }
+    this.el.innerHTML = html;
+    document.getElementById("debt-back").addEventListener("click", () => { this.state.view = "list"; this.state.selectedId = null; this.render(); });
+    document.getElementById("debt-addt").addEventListener("click", () => this.addTx(p.id));
+    document.getElementById("debt-delp").addEventListener("click", () => this.delPerson(p));
+    this.el.querySelectorAll("[data-del]").forEach(btn => btn.addEventListener("click", () => this.delTx(btn.dataset.del)));
+  },
+  addPerson() {
+    const m = document.createElement("div"); m.className = "modal-backdrop";
+    m.innerHTML = `<div class="modal"><h3>Yeni Kişi</h3>
+      <div class="form-field"><label>İsim</label><input type="text" id="dp-name" class="field-input" placeholder="örn. Ahmet"/></div>
+      <div id="dp-err" class="error-msg" style="display:none;"></div>
+      <div class="modal-actions"><button id="dp-cancel" class="btn-secondary">İptal</button>
+      <button id="dp-save" class="btn-primary">Ekle</button></div></div>`;
+    document.body.appendChild(m);
+    const inp = document.getElementById("dp-name"); inp.focus();
+    document.getElementById("dp-cancel").addEventListener("click", () => m.remove());
+    const save = async () => {
+      const name = inp.value.trim();
+      if (!name) { UI.showError("dp-err", "İsim gerekli"); return; }
+      if (this.state.people.some(p => p.name.toLowerCase() === name.toLowerCase())) { UI.showError("dp-err", "Bu kişi zaten var"); return; }
+      try {
+        const id = randomId("dp"); const now = Date.now();
+        await setDoc(doc(db, "broop_app", State.cloudId, "debtPeople", id),
+          { data: Crypto.encrypt({ name, createdBy: State.player.name, createdAt: now }, State.key), updatedAt: now });
+        m.remove(); UI.success("Eklendi ✓");
+      } catch (e) { UI.showError("dp-err", "Hata: " + e.message); }
+    };
+    document.getElementById("dp-save").addEventListener("click", save);
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") save(); });
+  },
+  addTx(presetPid) {
+    if (this.state.people.length === 0) { UI.error("Önce kişi ekle"); return; }
+    const m = document.createElement("div"); m.className = "modal-backdrop";
+    const opts = this.state.people.map(p => `<option value="${p.id}" ${p.id === presetPid ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("");
+    m.innerHTML = `<div class="modal"><h3>Yeni İşlem</h3>
+      <div class="form-field"><label>Kişi</label><select id="dt-person">${opts}</select></div>
+      <div class="form-field"><label>İşlem Tipi</label>
+        <div class="chip-row" id="dt-types">
+          <button class="chip active" data-t="give">📤 Borç verdim</button>
+          <button class="chip" data-t="collect">📥 Geri aldım</button>
+          <button class="chip" data-t="take">📥 Borç aldım</button>
+          <button class="chip" data-t="repay">📤 Geri ödedim</button>
+        </div></div>
+      <div class="form-field"><label>Tutar</label>
+        <div class="input-money"><span class="prefix">₺</span>
+        <input type="text" inputmode="decimal" id="dt-amount" placeholder="0"/></div></div>
+      <div class="form-field"><label>Tarih</label>
+        <input type="date" id="dt-date" class="field-input" value="${fmt.todayKey()}"/></div>
+      <div class="form-field"><label>Not <span class="lbl-tag">opsiyonel</span></label>
+        <textarea id="dt-note" rows="2"></textarea></div>
+      <div id="dt-err" class="error-msg" style="display:none;"></div>
+      <div class="modal-actions"><button id="dt-cancel" class="btn-secondary">İptal</button>
+      <button id="dt-save" class="btn-primary">Kaydet</button></div></div>`;
+    document.body.appendChild(m);
+    let type = "give";
+    m.querySelectorAll("#dt-types .chip").forEach(c => c.addEventListener("click", () => {
+      type = c.dataset.t;
+      m.querySelectorAll("#dt-types .chip").forEach(x => x.classList.toggle("active", x === c));
+    }));
+    document.getElementById("dt-cancel").addEventListener("click", () => m.remove());
+    document.getElementById("dt-save").addEventListener("click", async () => {
+      const pid = document.getElementById("dt-person").value;
+      const amount = fmt.parseNum(document.getElementById("dt-amount").value);
+      const date = document.getElementById("dt-date").value;
+      const note = document.getElementById("dt-note").value.trim();
+      if (amount <= 0) { UI.showError("dt-err", "Tutar gerekli"); return; }
+      if (!date) { UI.showError("dt-err", "Tarih gerekli"); return; }
+      const person = this.state.people.find(p => p.id === pid);
+      try {
+        const id = randomId("dt"); const now = Date.now();
+        await setDoc(doc(db, "broop_app", State.cloudId, "debtTx", id),
+          { data: Crypto.encrypt({ personId: pid, personName: person.name, type, amount, date, note, createdBy: State.player.name, createdAt: now }, State.key), date, updatedAt: now });
+        m.remove(); UI.success("Eklendi ✓");
+      } catch (e) { UI.showError("dt-err", "Hata: " + e.message); }
+    });
+  },
+  async delTx(id) {
+    const t = this.state.tx.find(x => x.id === id);
+    if (!t) return;
+    if (!confirm(`${fmt.dateKeyToDisplay(t.date)} · ${fmt.money(t.amount)} işlemini sil? Geri alınamaz.`)) return;
+    try { await deleteDoc(doc(db, "broop_app", State.cloudId, "debtTx", id)); UI.success("Silindi"); }
+    catch (e) { UI.error("Silinemedi: " + e.message); }
+  },
+  async delPerson(p) {
+    const cnt = this.state.tx.filter(t => t.personId === p.id).length;
+    let msg = `"${p.name}" kişisini sil?`;
+    if (cnt > 0) msg += `\n\n${cnt} işlem de silinecek. GERİ ALINAMAZ.`;
+    if (!confirm(msg)) return;
+    if (!confirm("Son uyarı: GERİ ALINAMAZ. Devam?")) return;
+    try {
+      const batch = writeBatch(db);
+      this.state.tx.filter(t => t.personId === p.id).forEach(t => batch.delete(doc(db, "broop_app", State.cloudId, "debtTx", t.id)));
+      batch.delete(doc(db, "broop_app", State.cloudId, "debtPeople", p.id));
+      await batch.commit();
+      this.state.view = "list"; this.state.selectedId = null;
+      UI.success("Silindi");
+    } catch (e) { UI.error("Silinemedi: " + e.message); }
+  }
+};
+
+// =====================================================================
+// DÖVİZ / ALTIN — alış + bozdurma, kâr/zarar
+// =====================================================================
+const FX_TYPES = [
+  { id: "usd", label: "Dolar", icon: "💵", unit: "$" },
+  { id: "eur", label: "Euro", icon: "💶", unit: "€" },
+  { id: "gold", label: "Altın", icon: "🥇", unit: "gr" }
+];
+const Forex = {
+  el: null,
+  state: { entries: [], unsub: null },
+  start() { this.el = document.getElementById("forex-content"); this.render(); this.attach(); },
+  stop() { if (this.state.unsub) { this.state.unsub(); this.state.unsub = null; } },
+  attach() {
+    if (this.state.unsub) this.state.unsub();
+    this.state.unsub = onSnapshot(collection(db, "broop_app", State.cloudId, "forex"), (snap) => {
+      const list = [];
+      snap.forEach(d => { const dec = Crypto.decrypt(d.data().data, State.key); if (dec) list.push({ id: d.id, ...dec }); });
+      list.sort((a, b) => b.date.localeCompare(a.date));
+      this.state.entries = list; this.render();
+    }, (e) => console.error("Forex:", e));
+  },
+  typeInfo(id) { return FX_TYPES.find(t => t.id === id) || FX_TYPES[0]; },
+  render() {
+    if (!this.el) return;
+    // Kâr/zarar yalnızca "sell" (bozdurma) kayıtlarında alış kuru girilmişse hesaplanır
+    let totalPL = 0;
+    this.state.entries.forEach(e => {
+      if (e.action === "sell" && e.buyRate > 0) {
+        totalPL += (e.rate - e.buyRate) * e.qty;
+      }
+    });
+    const plCls = totalPL >= 0 ? "green" : "red";
+    let html = `
+      <div class="gc-summary ${plCls}">
+        <div class="gc-label">Toplam Kâr / Zarar</div>
+        <div class="gc-big">${totalPL >= 0 ? '' : '−'}${fmt.money(Math.abs(totalPL))}</div>
+        <div class="gc-sub">Bozdurmalarda alış-satış farkı</div>
+      </div>
+      <div class="supplier-actions" style="grid-template-columns:1fr;">
+        <button id="fx-add" class="primary">+ İşlem Ekle</button></div>
+    `;
+    if (this.state.entries.length === 0) {
+      html += `<div class="empty-list"><p>Henüz işlem yok.</p>
+        <p style="font-size:12px;opacity:0.7;">Aldığın veya bozdurduğun döviz/altını kaydet.</p></div>`;
+    } else {
+      html += `<div class="list-header"><span>İşlemler (${this.state.entries.length})</span></div><div class="gc-list">`;
+      this.state.entries.forEach(e => {
+        const ti = this.typeInfo(e.fxType);
+        const isSell = e.action === "sell";
+        const tutar = e.rate * e.qty;
+        let plBadge = "";
+        if (isSell && e.buyRate > 0) {
+          const pl = (e.rate - e.buyRate) * e.qty;
+          plBadge = ` <span class="pl-badge ${pl >= 0 ? 'profit' : 'loss'}">${pl >= 0 ? '+' : '−'}${fmt.moneyShort(Math.abs(pl))}</span>`;
+        }
+        html += `
+          <div class="gc-item clickable" data-id="${e.id}">
+            <span class="gc-icon">${ti.icon}</span>
+            <div class="gc-main">
+              <div class="gc-title">${isSell ? 'Bozdurma' : 'Alış'} · ${e.qty} ${ti.unit}${plBadge}</div>
+              <div class="gc-meta">${fmt.dateKeyToDisplay(e.date)} · ₺${e.rate} ${e.unit || ti.unit}/birim</div>
+            </div>
+            <div class="gc-amount ${isSell ? 'pos' : 'neg'}">${fmt.money(tutar)}</div>
+            <button class="btn-delete" data-del="${e.id}">×</button>
+          </div>`;
+      });
+      html += `</div>`;
+    }
+    this.el.innerHTML = html;
+    document.getElementById("fx-add").addEventListener("click", () => this.dialog(null));
+    this.el.querySelectorAll(".gc-item.clickable").forEach(it => {
+      it.addEventListener("click", (ev) => {
+        if (ev.target.closest(".btn-delete")) return;
+        const e = this.state.entries.find(x => x.id === it.dataset.id);
+        if (e) this.dialog(e);
+      });
+    });
+    this.el.querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", (ev) => { ev.stopPropagation(); this.del(b.dataset.del); }));
+  },
+  dialog(existing) {
+    const m = document.createElement("div"); m.className = "modal-backdrop";
+    const typeChips = FX_TYPES.map(t => `<button class="chip ${(existing ? existing.fxType : 'usd') === t.id ? 'active' : ''}" data-fx="${t.id}">${t.icon} ${t.label}</button>`).join("");
+    m.innerHTML = `<div class="modal"><h3>${existing ? "İşlem Düzenle" : "Yeni İşlem"}</h3>
+      <div class="form-field"><label>Tür</label><div class="chip-row" id="fx-types">${typeChips}</div></div>
+      <div class="form-field"><label>İşlem</label>
+        <div class="chip-row" id="fx-actions">
+          <button class="chip ${(existing ? existing.action : 'sell') === 'sell' ? 'active' : ''}" data-act="sell">📤 Bozdurma</button>
+          <button class="chip ${(existing ? existing.action : 'sell') === 'buy' ? 'active' : ''}" data-act="buy">📥 Alış</button>
+        </div></div>
+      <div class="form-field"><label>Miktar <span class="lbl-tag" id="fx-unit-lbl">adet/gr</span></label>
+        <div class="input-money"><span class="prefix">#</span>
+        <input type="text" inputmode="decimal" id="fx-qty" placeholder="0" value="${existing ? existing.qty : ''}"/></div></div>
+      <div class="form-field"><label>Birim Kur (₺)</label>
+        <div class="input-money"><span class="prefix">₺</span>
+        <input type="text" inputmode="decimal" id="fx-rate" placeholder="0" value="${existing ? existing.rate : ''}"/></div></div>
+      <div class="form-field" id="fx-buyrate-wrap"><label>Alış Kuru <span class="lbl-tag">kâr/zarar için opsiyonel</span></label>
+        <div class="input-money"><span class="prefix">₺</span>
+        <input type="text" inputmode="decimal" id="fx-buyrate" placeholder="bozdururken aldığın kur" value="${existing && existing.buyRate ? existing.buyRate : ''}"/></div></div>
+      <div class="form-field"><label>Tarih</label>
+        <input type="date" id="fx-date" class="field-input" value="${existing ? existing.date : fmt.todayKey()}"/></div>
+      <div class="form-field"><label>Not <span class="lbl-tag">opsiyonel</span></label>
+        <textarea id="fx-note" rows="2">${existing ? escapeHtml(existing.note || "") : ""}</textarea></div>
+      <div class="form-field"><div class="field-hint" id="fx-total">Toplam: —</div></div>
+      <div id="fx-err" class="error-msg" style="display:none;"></div>
+      <div class="modal-actions"><button id="fx-cancel" class="btn-secondary">İptal</button>
+      ${existing ? '<button id="fx-del" class="btn-secondary" style="color:var(--danger);">Sil</button>' : ''}
+      <button id="fx-save" class="btn-primary">${existing ? "Güncelle" : "Kaydet"}</button></div></div>`;
+    document.body.appendChild(m);
+
+    let fxType = existing ? existing.fxType : "usd";
+    let action = existing ? existing.action : "sell";
+    const qtyI = document.getElementById("fx-qty");
+    const rateI = document.getElementById("fx-rate");
+    const buyWrap = document.getElementById("fx-buyrate-wrap");
+    const unitLbl = document.getElementById("fx-unit-lbl");
+    const totalEl = document.getElementById("fx-total");
+
+    const refresh = () => {
+      const ti = this.typeInfo(fxType);
+      unitLbl.textContent = ti.id === "gold" ? "gram" : "adet";
+      buyWrap.style.display = action === "sell" ? "" : "none";
+      const q = fmt.parseNum(qtyI.value), r = fmt.parseNum(rateI.value);
+      totalEl.textContent = (q > 0 && r > 0) ? `Toplam: ${fmt.money(q * r)}` : "Toplam: —";
+    };
+    m.querySelectorAll("#fx-types .chip").forEach(c => c.addEventListener("click", () => {
+      fxType = c.dataset.fx;
+      m.querySelectorAll("#fx-types .chip").forEach(x => x.classList.toggle("active", x === c));
+      refresh();
+    }));
+    m.querySelectorAll("#fx-actions .chip").forEach(c => c.addEventListener("click", () => {
+      action = c.dataset.act;
+      m.querySelectorAll("#fx-actions .chip").forEach(x => x.classList.toggle("active", x === c));
+      refresh();
+    }));
+    qtyI.addEventListener("input", refresh);
+    rateI.addEventListener("input", refresh);
+    refresh();
+
+    document.getElementById("fx-cancel").addEventListener("click", () => m.remove());
+    if (existing) document.getElementById("fx-del").addEventListener("click", () => { m.remove(); this.del(existing.id); });
+    document.getElementById("fx-save").addEventListener("click", async () => {
+      const qty = fmt.parseNum(qtyI.value);
+      const rate = fmt.parseNum(rateI.value);
+      const buyRate = fmt.parseNum(document.getElementById("fx-buyrate").value);
+      const date = document.getElementById("fx-date").value;
+      const note = document.getElementById("fx-note").value.trim();
+      if (qty <= 0) { UI.showError("fx-err", "Miktar gerekli"); return; }
+      if (rate <= 0) { UI.showError("fx-err", "Kur gerekli"); return; }
+      if (!date) { UI.showError("fx-err", "Tarih gerekli"); return; }
+      try {
+        const now = Date.now();
+        const id = existing?.id || randomId("fx");
+        const ti = this.typeInfo(fxType);
+        const data = {
+          fxType, action, qty, rate,
+          buyRate: action === "sell" ? buyRate : 0,
+          unit: ti.unit, date, note,
+          createdBy: existing ? existing.createdBy : State.player.name,
+          createdAt: existing ? existing.createdAt : now,
+          lastEditedBy: State.player.name, updatedAt: now
+        };
+        await setDoc(doc(db, "broop_app", State.cloudId, "forex", id),
+          { data: Crypto.encrypt(data, State.key), date, updatedAt: now });
+        m.remove(); UI.success(existing ? "Güncellendi ✓" : "Eklendi ✓");
+      } catch (e) { UI.showError("fx-err", "Hata: " + e.message); }
+    });
+  },
+  async del(id) {
+    const e = this.state.entries.find(x => x.id === id);
+    if (!e) return;
+    if (!confirm("Bu işlemi sil? Geri alınamaz.")) return;
+    try { await deleteDoc(doc(db, "broop_app", State.cloudId, "forex", id)); UI.success("Silindi"); }
+    catch (e) { UI.error("Silinemedi: " + e.message); }
+  }
+};
+
+// =====================================================================
+// ARAÇ GİDERLERİ — araç seçmeli (Audi / Eski Doblo / Yeni Doblo)
+// =====================================================================
+const VEHICLES = [
+  { id: "audi", label: "Audi", icon: "🚗" },
+  { id: "eskiDoblo", label: "Eski Doblo", icon: "🚐" },
+  { id: "yeniDoblo", label: "Yeni Doblo", icon: "🚐" }
+];
+const Vehicle = {
+  el: null,
+  state: { entries: [], unsub: null, filter: "all" },
+  start() { this.el = document.getElementById("vehicle-content"); this.render(); this.attach(); },
+  stop() { if (this.state.unsub) { this.state.unsub(); this.state.unsub = null; } },
+  attach() {
+    if (this.state.unsub) this.state.unsub();
+    this.state.unsub = onSnapshot(collection(db, "broop_app", State.cloudId, "vehicle"), (snap) => {
+      const list = [];
+      snap.forEach(d => { const dec = Crypto.decrypt(d.data().data, State.key); if (dec) list.push({ id: d.id, ...dec }); });
+      list.sort((a, b) => b.date.localeCompare(a.date));
+      this.state.entries = list; this.render();
+    }, (e) => console.error("Vehicle:", e));
+  },
+  vInfo(id) { return VEHICLES.find(v => v.id === id) || { label: "?", icon: "🚗" }; },
+  render() {
+    if (!this.el) return;
+    const f = this.state.filter;
+    const filtered = f === "all" ? this.state.entries : this.state.entries.filter(e => e.vehicle === f);
+    const total = filtered.reduce((s, e) => s + (e.amount || 0), 0);
+    // Araç başına toplamlar
+    const perV = {};
+    VEHICLES.forEach(v => perV[v.id] = 0);
+    this.state.entries.forEach(e => { if (perV[e.vehicle] !== undefined) perV[e.vehicle] += e.amount || 0; });
+
+    let html = `
+      <div class="gc-summary red">
+        <div class="gc-label">${f === "all" ? "Tüm Araçlar" : this.vInfo(f).label} · ${filtered.length} kayıt</div>
+        <div class="gc-big">${fmt.money(total)}</div>
+        <div class="gc-sub">${VEHICLES.map(v => `${v.label}: ${fmt.moneyShort(perV[v.id])}`).join(" · ")}</div>
+      </div>
+      <div class="chip-row" style="margin-bottom:12px;">
+        <button class="chip ${f === 'all' ? 'active' : ''}" data-f="all">Hepsi</button>
+        ${VEHICLES.map(v => `<button class="chip ${f === v.id ? 'active' : ''}" data-f="${v.id}">${v.icon} ${v.label}</button>`).join("")}
+      </div>
+      <div class="supplier-actions" style="grid-template-columns:1fr;">
+        <button id="veh-add" class="primary">+ Araç Gideri Ekle</button></div>
+    `;
+    if (filtered.length === 0) {
+      html += `<div class="empty-list"><p>Bu filtrede gider yok.</p></div>`;
+    } else {
+      html += `<div class="list-header"><span>Giderler</span></div><div class="gc-list">`;
+      filtered.forEach(e => {
+        const vi = this.vInfo(e.vehicle);
+        html += `
+          <div class="gc-item clickable" data-id="${e.id}">
+            <span class="gc-icon">${vi.icon}</span>
+            <div class="gc-main"><div class="gc-title">${vi.label} · ${fmt.dateKeyToDisplay(e.date)}</div>
+              ${e.desc ? `<div class="gc-meta">${escapeHtml(e.desc)}</div>` : ""}</div>
+            <div class="gc-amount neg">${fmt.money(e.amount)}</div>
+            <button class="btn-delete" data-del="${e.id}">×</button>
+          </div>`;
+      });
+      html += `</div>`;
+    }
+    this.el.innerHTML = html;
+    this.el.querySelectorAll(".chip-row .chip").forEach(c => c.addEventListener("click", () => { this.state.filter = c.dataset.f; this.render(); }));
+    document.getElementById("veh-add").addEventListener("click", () => this.dialog(null));
+    this.el.querySelectorAll(".gc-item.clickable").forEach(it => {
+      it.addEventListener("click", (ev) => {
+        if (ev.target.closest(".btn-delete")) return;
+        const e = this.state.entries.find(x => x.id === it.dataset.id);
+        if (e) this.dialog(e);
+      });
+    });
+    this.el.querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", (ev) => { ev.stopPropagation(); this.del(b.dataset.del); }));
+  },
+  dialog(existing) {
+    const m = document.createElement("div"); m.className = "modal-backdrop";
+    const chips = VEHICLES.map(v => `<button class="chip ${(existing ? existing.vehicle : 'audi') === v.id ? 'active' : ''}" data-v="${v.id}">${v.icon} ${v.label}</button>`).join("");
+    m.innerHTML = `<div class="modal"><h3>${existing ? "Araç Gideri Düzenle" : "Yeni Araç Gideri"}</h3>
+      <div class="form-field"><label>Araç</label><div class="chip-row" id="veh-types">${chips}</div></div>
+      <div class="form-field"><label>Tutar</label>
+        <div class="input-money"><span class="prefix">₺</span>
+        <input type="text" inputmode="decimal" id="veh-amount" placeholder="0" value="${existing ? existing.amount : ''}"/></div></div>
+      <div class="form-field"><label>Tarih</label>
+        <input type="date" id="veh-date" class="field-input" value="${existing ? existing.date : fmt.todayKey()}"/></div>
+      <div class="form-field"><label>Açıklama <span class="lbl-tag">opsiyonel</span></label>
+        <textarea id="veh-desc" rows="2" placeholder="örn. yakıt, lastik, bakım">${existing ? escapeHtml(existing.desc || "") : ""}</textarea></div>
+      <div id="veh-err" class="error-msg" style="display:none;"></div>
+      <div class="modal-actions"><button id="veh-cancel" class="btn-secondary">İptal</button>
+      ${existing ? '<button id="veh-del" class="btn-secondary" style="color:var(--danger);">Sil</button>' : ''}
+      <button id="veh-save" class="btn-primary">${existing ? "Güncelle" : "Kaydet"}</button></div></div>`;
+    document.body.appendChild(m);
+    let vehicle = existing ? existing.vehicle : "audi";
+    m.querySelectorAll("#veh-types .chip").forEach(c => c.addEventListener("click", () => {
+      vehicle = c.dataset.v;
+      m.querySelectorAll("#veh-types .chip").forEach(x => x.classList.toggle("active", x === c));
+    }));
+    document.getElementById("veh-cancel").addEventListener("click", () => m.remove());
+    if (existing) document.getElementById("veh-del").addEventListener("click", () => { m.remove(); this.del(existing.id); });
+    document.getElementById("veh-save").addEventListener("click", async () => {
+      const amount = fmt.parseNum(document.getElementById("veh-amount").value);
+      const date = document.getElementById("veh-date").value;
+      const desc = document.getElementById("veh-desc").value.trim();
+      if (amount <= 0) { UI.showError("veh-err", "Tutar gerekli"); return; }
+      if (!date) { UI.showError("veh-err", "Tarih gerekli"); return; }
+      try {
+        const now = Date.now();
+        const id = existing?.id || randomId("veh");
+        const data = {
+          vehicle, amount, date, desc,
+          createdBy: existing ? existing.createdBy : State.player.name,
+          createdAt: existing ? existing.createdAt : now,
+          lastEditedBy: State.player.name, updatedAt: now
+        };
+        await setDoc(doc(db, "broop_app", State.cloudId, "vehicle", id),
+          { data: Crypto.encrypt(data, State.key), date, updatedAt: now });
+        m.remove(); UI.success(existing ? "Güncellendi ✓" : "Eklendi ✓");
+      } catch (e) { UI.showError("veh-err", "Hata: " + e.message); }
+    });
+  },
+  async del(id) {
+    const e = this.state.entries.find(x => x.id === id);
+    if (!e) return;
+    if (!confirm(`${this.vInfo(e.vehicle).label} · ${fmt.money(e.amount)} giderini sil? Geri alınamaz.`)) return;
+    try { await deleteDoc(doc(db, "broop_app", State.cloudId, "vehicle", id)); UI.success("Silindi"); }
+    catch (e) { UI.error("Silinemedi: " + e.message); }
+  }
+};
+
 const More = {
   el: null,
   state: {
@@ -5579,6 +6384,10 @@ const More = {
     if (this.state.view === "menu") this.renderMenu();
     else if (this.state.view === "notes") this.renderNotesPage();
     else if (this.state.view === "report") this.renderReportPage();
+    else if (this.state.view === "house") this.renderSubPage("house", "🧱 Ev / İnşaat", "Eve yapılan harcamalar", House);
+    else if (this.state.view === "debt") this.renderSubPage("debt", "🤝 Borç Defteri", "Verdiğin/aldığın borçlar", Debt);
+    else if (this.state.view === "forex") this.renderSubPage("forex", "💱 Döviz / Altın", "Alış, bozdurma, kâr/zarar", Forex);
+    else if (this.state.view === "vehicle") this.renderSubPage("vehicle", "🚗 Araç Giderleri", "Audi, Eski/Yeni Doblo", Vehicle);
   },
 
   renderMenu() {
@@ -5589,6 +6398,14 @@ const More = {
       </div>
 
       <div class="more-menu">
+        <div class="more-item" data-view="report">
+          <span class="more-icon">📊</span>
+          <div class="more-label">
+            <div class="title">Rapor</div>
+            <div class="desc">Aylık özet, kanal dağılımı, rekorlar</div>
+          </div>
+          <span class="more-arrow">›</span>
+        </div>
         <div class="more-item" data-view="notes">
           <span class="more-icon">📝</span>
           <div class="more-label">
@@ -5597,11 +6414,35 @@ const More = {
           </div>
           <span class="more-arrow">›</span>
         </div>
-        <div class="more-item" data-view="report">
-          <span class="more-icon">📊</span>
+        <div class="more-item" data-view="debt">
+          <span class="more-icon">🤝</span>
           <div class="more-label">
-            <div class="title">Rapor</div>
-            <div class="desc">Aylık özet, kanal dağılımı, rekorlar</div>
+            <div class="title">Borç Defteri</div>
+            <div class="desc">Verdiğin / aldığın borçlar</div>
+          </div>
+          <span class="more-arrow">›</span>
+        </div>
+        <div class="more-item" data-view="forex">
+          <span class="more-icon">💱</span>
+          <div class="more-label">
+            <div class="title">Döviz / Altın</div>
+            <div class="desc">Alış, bozdurma, kâr/zarar</div>
+          </div>
+          <span class="more-arrow">›</span>
+        </div>
+        <div class="more-item" data-view="vehicle">
+          <span class="more-icon">🚗</span>
+          <div class="more-label">
+            <div class="title">Araç Giderleri</div>
+            <div class="desc">Audi, Eski/Yeni Doblo</div>
+          </div>
+          <span class="more-arrow">›</span>
+        </div>
+        <div class="more-item" data-view="house">
+          <span class="more-icon">🧱</span>
+          <div class="more-label">
+            <div class="title">Ev / İnşaat</div>
+            <div class="desc">Eve yapılan harcamalar</div>
           </div>
           <span class="more-arrow">›</span>
         </div>
@@ -5618,7 +6459,7 @@ const More = {
         <button id="btn-check-update" class="btn-secondary">🔄 Güncellemeleri kontrol et</button>
         <button id="btn-more-logout" class="btn-secondary">Çıkış yap</button>
         <div style="text-align: center; font-size: 11px; color: var(--text-tertiary); margin-top: 8px; font-family: 'Manrope', sans-serif;">
-          Orçun Dondurma · v0.7.6
+          Orçun Dondurma · v0.8.0
         </div>
       </div>
     `;
@@ -5668,6 +6509,22 @@ const More = {
 
     Report.start();
     this.activeSub = Report;
+  },
+
+  renderSubPage(slug, title, subtitle, module) {
+    this.el.innerHTML = `
+      <div class="detail-header">
+        <button class="btn-back" id="btn-back-${slug}" title="Geri">‹</button>
+        <div class="info">
+          <div class="name">${title}</div>
+          <div class="balance-tag">${subtitle}</div>
+        </div>
+      </div>
+      <div id="${slug}-content"></div>
+    `;
+    document.getElementById("btn-back-" + slug).addEventListener("click", () => this.goTo("menu"));
+    module.start();
+    this.activeSub = module;
   }
 };
 
