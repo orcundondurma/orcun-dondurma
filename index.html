@@ -45,6 +45,94 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+/* ==================== Erişilebilirlik: Ölçek ==================== */
+/* Tüm uygulamayı orantılı büyütür/küçültür. Kişiye özel (localStorage). */
+#app, #loginScreen {
+  zoom: var(--ui-scale, 1);
+}
+/* zoom desteklemeyen tarayıcılar için fallback (nadir) */
+@supports not (zoom: 1) {
+  #app, #loginScreen {
+    font-size: calc(15px * var(--ui-scale, 1));
+  }
+}
+.a11y-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.a11y-scale-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+.a11y-scale-row .a11y-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.a11y-scale-row .a11y-btn:active { background: var(--border); }
+.a11y-scale-row .a11y-value {
+  flex: 1;
+  text-align: center;
+}
+.a11y-scale-row .a11y-value .pct {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent-more);
+  font-variant-numeric: tabular-nums;
+}
+.a11y-scale-row .a11y-value .lbl {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+.a11y-presets {
+  display: flex;
+  gap: 6px;
+}
+.a11y-presets .preset {
+  flex: 1;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 12px 8px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+.a11y-presets .preset.active {
+  background: var(--accent-more);
+  color: var(--bg-deep);
+  border-color: var(--accent-more);
+}
+.a11y-preview {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-top: 8px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
 html, body {
   margin: 0; padding: 0;
   background: var(--bg-base);
@@ -2168,12 +2256,12 @@ body {
     </nav>
   </div>
 
-  <div class="version-tag">v0.8.0</div>
+  <div class="version-tag">v0.8.2</div>
 </div>
 
 <script type="module">
 // =====================================================================
-// Orçun Dondurma — v0.8.0
+// Orçun Dondurma — v0.8.2
 // =====================================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
@@ -2273,6 +2361,45 @@ const Session = {
   clear() {
     try { localStorage.removeItem(this.KEY); } catch (e) {}
   }
+};
+
+// =====================================================================
+// Accessibility — kişiye özel arayüz ölçeği (localStorage, cloud DEĞİL)
+// Her telefon kendi büyüklüğünü ayarlar. Annenin telefonu büyük,
+// seninki normal kalabilir.
+// =====================================================================
+const Accessibility = {
+  KEY: "orcun-ui-scale",
+  MIN: 0.8,
+  MAX: 2.0,
+  STEP: 0.1,
+  current: 1,
+
+  load() {
+    try {
+      const v = parseFloat(localStorage.getItem(this.KEY));
+      this.current = (v >= this.MIN && v <= this.MAX) ? v : 1;
+    } catch (e) {
+      this.current = 1;
+    }
+    this.apply();
+  },
+
+  apply() {
+    document.documentElement.style.setProperty("--ui-scale", this.current);
+  },
+
+  set(scale) {
+    this.current = Math.min(this.MAX, Math.max(this.MIN, Math.round(scale * 10) / 10));
+    try { localStorage.setItem(this.KEY, String(this.current)); } catch (e) {}
+    this.apply();
+  },
+
+  inc() { this.set(this.current + this.STEP); },
+  dec() { this.set(this.current - this.STEP); },
+  reset() { this.set(1); },
+
+  pct() { return Math.round(this.current * 100); }
 };
 
 // =====================================================================
@@ -5448,8 +5575,12 @@ const Report = {
   state: {
     income: [],
     expense: [],
+    house: [],
+    vehicle: [],
     unsubIncome: null,
-    unsubExpense: null
+    unsubExpense: null,
+    unsubHouse: null,
+    unsubVehicle: null
   },
 
   start() {
@@ -5461,11 +5592,15 @@ const Report = {
   stop() {
     if (this.state.unsubIncome) { this.state.unsubIncome(); this.state.unsubIncome = null; }
     if (this.state.unsubExpense) { this.state.unsubExpense(); this.state.unsubExpense = null; }
+    if (this.state.unsubHouse) { this.state.unsubHouse(); this.state.unsubHouse = null; }
+    if (this.state.unsubVehicle) { this.state.unsubVehicle(); this.state.unsubVehicle = null; }
   },
 
   attachListeners() {
     if (this.state.unsubIncome) this.state.unsubIncome();
     if (this.state.unsubExpense) this.state.unsubExpense();
+    if (this.state.unsubHouse) this.state.unsubHouse();
+    if (this.state.unsubVehicle) this.state.unsubVehicle();
 
     const incRef = collection(db, "broop_app", State.cloudId, "income");
     this.state.unsubIncome = onSnapshot(incRef, (snap) => {
@@ -5492,6 +5627,28 @@ const Report = {
       this.state.expense = list;
       this.render();
     }, (err) => console.error("Report expense listener:", err));
+
+    const houseRef = collection(db, "broop_app", State.cloudId, "house");
+    this.state.unsubHouse = onSnapshot(houseRef, (snap) => {
+      const list = [];
+      snap.forEach(d => {
+        const dec = Crypto.decrypt(d.data().data, State.key);
+        if (dec) list.push(dec);
+      });
+      this.state.house = list;
+      this.render();
+    }, (err) => console.error("Report house listener:", err));
+
+    const vehRef = collection(db, "broop_app", State.cloudId, "vehicle");
+    this.state.unsubVehicle = onSnapshot(vehRef, (snap) => {
+      const list = [];
+      snap.forEach(d => {
+        const dec = Crypto.decrypt(d.data().data, State.key);
+        if (dec) list.push(dec);
+      });
+      this.state.vehicle = list;
+      this.render();
+    }, (err) => console.error("Report vehicle listener:", err));
   },
 
   groupByMonth() {
@@ -5585,9 +5742,9 @@ const Report = {
     const netSign = yearTotal.net >= 0 ? "" : "−";
     html += `
       <div class="report-section">
-        <div class="report-section-title">2026 Yıllık</div>
+        <div class="report-section-title">2026 Yıllık · Dükkan</div>
         <div class="year-summary">
-          <div class="year-label">${yearTotal.incomeDays} gün satış · Net</div>
+          <div class="year-label">${yearTotal.incomeDays} gün satış · Dükkan Neti</div>
           <div class="year-net ${netCls}">${netSign}${fmt.money(Math.abs(yearTotal.net))}</div>
           <div class="year-detail">
             <span>+ <span class="year-income-val">${fmt.money(yearTotal.income)}</span></span>
@@ -5596,6 +5753,42 @@ const Report = {
         </div>
       </div>
     `;
+
+    // === Genel Net (dükkan neti − araç − ev) ===
+    const houseTotal = this.state.house.reduce((s, e) => s + (e.amount || 0), 0);
+    const vehicleTotal = this.state.vehicle.reduce((s, e) => s + (e.amount || 0), 0);
+    const otherTotal = houseTotal + vehicleTotal;
+    if (otherTotal > 0) {
+      const genelNet = yearTotal.net - otherTotal;
+      const gCls = genelNet >= 0 ? "" : "negative";
+      const gSign = genelNet >= 0 ? "" : "−";
+      html += `
+        <div class="report-section">
+          <div class="report-section-title">Genel Net (cepten toplam)</div>
+          <div class="year-summary">
+            <div class="year-label">Dükkan neti − araç − ev</div>
+            <div class="year-net ${gCls}">${gSign}${fmt.money(Math.abs(genelNet))}</div>
+            <div class="gc-list" style="margin-top:12px;">
+              <div class="gc-item" style="grid-template-columns: 26px 1fr auto;">
+                <span class="gc-icon">🏪</span>
+                <div class="gc-main"><div class="gc-title">Dükkan neti</div></div>
+                <div class="gc-amount ${yearTotal.net >= 0 ? 'pos' : 'neg'}">${yearTotal.net >= 0 ? '' : '−'}${fmt.money(Math.abs(yearTotal.net))}</div>
+              </div>
+              <div class="gc-item" style="grid-template-columns: 26px 1fr auto;">
+                <span class="gc-icon">🚗</span>
+                <div class="gc-main"><div class="gc-title">Araç giderleri</div></div>
+                <div class="gc-amount neg">−${fmt.money(vehicleTotal)}</div>
+              </div>
+              <div class="gc-item" style="grid-template-columns: 26px 1fr auto;">
+                <span class="gc-icon">🧱</span>
+                <div class="gc-main"><div class="gc-title">Ev / inşaat</div></div>
+                <div class="gc-amount neg">−${fmt.money(houseTotal)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
     // === Bu ayın kanal dağılımı ===
     const thisMonth = months.find(m => m.key === currentMonth);
@@ -6388,6 +6581,7 @@ const More = {
     else if (this.state.view === "debt") this.renderSubPage("debt", "🤝 Borç Defteri", "Verdiğin/aldığın borçlar", Debt);
     else if (this.state.view === "forex") this.renderSubPage("forex", "💱 Döviz / Altın", "Alış, bozdurma, kâr/zarar", Forex);
     else if (this.state.view === "vehicle") this.renderSubPage("vehicle", "🚗 Araç Giderleri", "Audi, Eski/Yeni Doblo", Vehicle);
+    else if (this.state.view === "a11y") this.renderA11yPage();
   },
 
   renderMenu() {
@@ -6446,6 +6640,14 @@ const More = {
           </div>
           <span class="more-arrow">›</span>
         </div>
+        <div class="more-item" data-view="a11y">
+          <span class="more-icon">🔍</span>
+          <div class="more-label">
+            <div class="title">Görünüm / Yazı Boyutu</div>
+            <div class="desc">Yazı ve ikonları büyüt-küçült</div>
+          </div>
+          <span class="more-arrow">›</span>
+        </div>
         <div class="more-item disabled">
           <span class="more-icon">👥</span>
           <div class="more-label">
@@ -6459,7 +6661,7 @@ const More = {
         <button id="btn-check-update" class="btn-secondary">🔄 Güncellemeleri kontrol et</button>
         <button id="btn-more-logout" class="btn-secondary">Çıkış yap</button>
         <div style="text-align: center; font-size: 11px; color: var(--text-tertiary); margin-top: 8px; font-family: 'Manrope', sans-serif;">
-          Orçun Dondurma · v0.8.0
+          Orçun Dondurma · v0.8.2
         </div>
       </div>
     `;
@@ -6525,6 +6727,58 @@ const More = {
     document.getElementById("btn-back-" + slug).addEventListener("click", () => this.goTo("menu"));
     module.start();
     this.activeSub = module;
+  },
+
+  renderA11yPage() {
+    const draw = () => {
+      const pct = Accessibility.pct();
+      this.el.innerHTML = `
+        <div class="detail-header">
+          <button class="btn-back" id="btn-back-a11y" title="Geri">‹</button>
+          <div class="info">
+            <div class="name">🔍 Görünüm</div>
+            <div class="balance-tag">Yazı ve ikon boyutu (bu telefona özel)</div>
+          </div>
+        </div>
+
+        <div class="a11y-options">
+          <div class="a11y-scale-row">
+            <button class="a11y-btn" id="a11y-minus" aria-label="Küçült">−</button>
+            <div class="a11y-value">
+              <div class="pct">${pct}%</div>
+              <div class="lbl">Boyut</div>
+            </div>
+            <button class="a11y-btn" id="a11y-plus" aria-label="Büyüt">+</button>
+          </div>
+
+          <div class="a11y-presets">
+            <button class="preset ${pct === 90 ? 'active' : ''}" data-s="0.9">Küçük</button>
+            <button class="preset ${pct === 100 ? 'active' : ''}" data-s="1">Normal</button>
+            <button class="preset ${pct === 130 ? 'active' : ''}" data-s="1.3">Büyük</button>
+            <button class="preset ${pct === 160 ? 'active' : ''}" data-s="1.6">Çok Büyük</button>
+          </div>
+
+          <div class="a11y-preview">
+            Bu yazı seçtiğin boyutta görünüyor. Rahat okuyabiliyorsan boyut uygun demektir.
+          </div>
+
+          <button class="btn-secondary" id="a11y-reset" style="margin-top:8px;">Normale Döndür (100%)</button>
+        </div>
+
+        <div style="margin-top:16px; font-size:12px; color:var(--text-tertiary); line-height:1.6;">
+          💡 Bu ayar yalnızca <strong>bu telefonu</strong> etkiler. Başka cihazlarda kendi boyutu korunur.
+        </div>
+      `;
+
+      document.getElementById("btn-back-a11y").addEventListener("click", () => this.goTo("menu"));
+      document.getElementById("a11y-minus").addEventListener("click", () => { Accessibility.dec(); draw(); });
+      document.getElementById("a11y-plus").addEventListener("click", () => { Accessibility.inc(); draw(); });
+      document.getElementById("a11y-reset").addEventListener("click", () => { Accessibility.reset(); draw(); });
+      this.el.querySelectorAll(".a11y-presets .preset").forEach(b => {
+        b.addEventListener("click", () => { Accessibility.set(parseFloat(b.dataset.s)); draw(); });
+      });
+    };
+    draw();
   }
 };
 
@@ -6818,6 +7072,7 @@ document.getElementById("input-playerName").addEventListener("keydown", (e) => {
 // =====================================================================
 // Başlat
 // =====================================================================
+Accessibility.load();
 App.init();
 
 // Önceki oturumu otomatik aç (varsa)
